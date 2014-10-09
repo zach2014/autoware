@@ -1,5 +1,6 @@
 #endpoint is a kind of application/service server, can be accessed through network socket, vty terminal, like shell, serial, ssh, web, ftp, telnet, etc.
 #
+__ALL__ = ["Endpoint", "Service"]
 class Endpoint(object):
     """A kind of service point"""
     def __init__(self, pointType=None, *url, **kwargs):
@@ -23,30 +24,48 @@ class Endpoint(object):
 	return _tearDown()
 
     def _startUp(self):
-	if self.pointType == Service.serial:
+	if self.pointType == Service.scp:
 	    pass
 	if self.pointType == Service.ssh:
 	    pass
 	if self.pointType == Service.telnet:
 	    raise NotImplementedError
-	if self.pointType == Service.http:
+	if self.pointType == Service.web:
 	    raise NotImplementedError
-	if self.pointType == Service.https:
+	if self.pointType == Service.sftp:
 	    raise NotImplementedError
 
     def _tearDown(self):
 	pass 
 
 
-class Service:
+class ServiceMeta(type):
+    @property
+    def ssh(cls):
+	return cls.sshname
+
+    @property
+    def telnet(cls):
+	return cls.telnetname
+
+    @property
+    def web(cls):
+	return cls.webname
+
+    @property
+    def scp(cls):
+	return cls.scpname
+
+    @property
+    def sftp(cls):
+	return cls.sftpname
+
+class Service(object):
     """Service typs collection to use directly, like Service.ssh"""
-    shell = "shell"
-    serial = "serial"
-    ssh = "ssh"
-    telnet = "telnet"
-    http = "http"
-    https = "https"
-    ftp = "ftp"
-    tftp = "tftp"
-    scp = "scp"
-    
+    __metaclass__=ServiceMeta
+    sshname = "ssh"
+    telnetname = "telnet"
+    webname = "web"
+    scpname = "scp"
+    sftpname = "sftp"
+  
