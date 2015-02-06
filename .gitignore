@@ -16,3 +16,4 @@ localrc
 **/.classpath
 **/.project
 **/.settings/*
+**/target/*
