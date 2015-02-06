@@ -1,0 +1,5 @@
+gw.ip=192.168.1.1
+gw.hostname=""
+gw.firmware="openwrt"
+gw.user.admin.name="admin"
+gw.user.admin.passwd="admin"
