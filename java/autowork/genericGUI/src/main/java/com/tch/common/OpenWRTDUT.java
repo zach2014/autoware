@@ -6,12 +6,13 @@ import java.util.Properties;
 
 import org.openqa.selenium.WebDriver;
 
-public class OpenWRTDUT {
-
+public class OpenWRTDUT extends CPE {
+    public final static String DEF_HOST_IP = "192.168.1.1";
 	private Properties propties = null;
     private Properties conf=null;
 	
-	public OpenWRTDUT(String properties){
+	public OpenWRTDUT(String variant, String properties){
+        super(variant, DEF_HOST_IP);
 		propties=new Properties();
 		InputStream propFile = getClass().getResourceAsStream(properties);
 		try {
@@ -21,7 +22,8 @@ public class OpenWRTDUT {
 		}
 	}
 			
-	public OpenWRTDUT(String properties, String configures){
+	public OpenWRTDUT(String variant,String properties, String configures){
+        super(variant, DEF_HOST_IP);
 		propties=new Properties();
 		conf = new Properties();
 		InputStream propFile = getClass().getResourceAsStream(properties);

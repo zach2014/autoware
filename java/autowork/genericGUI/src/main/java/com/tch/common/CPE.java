@@ -1,18 +1,18 @@
 package com.tch.common;
 
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 public class CPE {
 	
-	private String variant;
+	private String variant;   //readonly
 	private String hostAddr;
-	private Set<String> services;
+	private Set<String> services; //supported services, like web, ssh, etc.
 	
 	public CPE(){
 		this.variant=null;
 		this.hostAddr=null;
-		this.services=null;
+		this.services=new HashSet<String>();
 	}
 	
 	public CPE(String variant, String host_ip){
@@ -27,10 +27,6 @@ public class CPE {
 		this.services=services;
 	}
 	
-	public void setVariant(String variant){
-		this.variant=variant;
-	}
-	
 	public String getVariant(){
 		return variant;
 	}
@@ -43,8 +39,8 @@ public class CPE {
 		return this.hostAddr;
 	}
 	
-	public void setServices(Collection<String> services){
-		this.services.addAll(services);
+	public void setServices(Set<String> services){
+		this.services = services;
 	}
 	
 	public boolean isEnabled(String service){
@@ -60,15 +56,12 @@ public class CPE {
 	}
 	
 	public String toString(){
-		return "["+variant+"]@"+hostAddr;
+        String str_svrs=" ";
+        for( String s : services) {
+            str_svrs += s;
+            str_svrs += "/";
+        }
+		return "["+variant+"]@"+hostAddr + " with services of" + str_svrs;
 	}
 	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-	}
-
 }
