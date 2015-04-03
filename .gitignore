@@ -13,6 +13,8 @@ local.conf
 local.sh
 localrc
 **/.metadata/*
+**/.recommenders/*
+
 java/autowork/genericGUI/.metadata/*
 **/.classpath
 **/.project
