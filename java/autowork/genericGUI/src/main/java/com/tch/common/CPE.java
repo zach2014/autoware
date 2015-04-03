@@ -1,44 +1,66 @@
 package com.tch.common;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class CPE {
+public abstract class CPE {
 	
-	private String variant;   //readonly
-	private String hostAddr;
-	private Set<String> services; //supported services, like web, ssh, etc.
+	public static final String NG_DEF_SW_FG = "OpenWrt";
+	public static final String DEF_SW_FG = "Legacy";
+	public static final String DEF_USER = "root";
+	public static final String DEF_PASSWD = "root";
+	public static final String DEF_HOST_IP = "192.168.1.1";
 	
+	private List<Account> accounts= new ArrayList<Account>();
+	private String host = DEF_HOST_IP; // ipv4 address in string
+		
 	public CPE(){
-		this.variant=null;
-		this.hostAddr=null;
-		this.services=new HashSet<String>();
+		this.accounts.add(new Account());
+		this.host = DEF_HOST_IP;
 	}
 	
-	public CPE(String variant, String host_ip){
-		this.variant=variant;
-		this.hostAddr=host_ip;
-		this.services=null;
+	public CPE(String host){
+		this.accounts.add(new Account());
+		this.host = host;
 	}
 	
-	public CPE(String variant, String host_ip, Set<String> services){
-		this.variant=variant;
-		this.hostAddr=host_ip;
-		this.services=services;
+	public CPE(String userName, String passwd){
+		this.accounts.add(new Account(userName, passwd));
 	}
 	
-	public String getVariant(){
-		return variant;
+	public CPE(List<Account> accounts, String hostIP){
+		this.accounts.addAll(accounts);
+		this.host = hostIP;
 	}
 	
-	public void setHostAddr(String ip){
-		this.hostAddr=ip;
+	public void setHost(String ipString){
+		host = ipString;
+	}
+	public String getHost(){
+		return this.host;
 	}
 	
-	public String getHostAddr(){
-		return this.hostAddr;
+	public InetAddress getV4Address() throws UnknownHostException{
+		return InetAddress.getByName(host);
+	}
+		
+	public boolean addAccount(Account account){
+		return this.accounts.add(account);
 	}
 	
+	public boolean delAccount(String userName){
+		for(Account a : this.accounts){
+			if(a.getUserName().equals(userName)){
+				return this.accounts.remove(a);
+			}
+		}
+		return false;
+		
+	}
+	
+	/*
 	public void setServices(Set<String> services){
 		this.services = services;
 	}
@@ -55,13 +77,8 @@ public class CPE {
 		services.remove(service);
 	}
 	
-	public String toString(){
-        String str_svrs=" ";
-        for( String s : services) {
-            str_svrs += s;
-            str_svrs += "/";
-        }
-		return "["+variant+"]@"+hostAddr + " with services of" + str_svrs;
+	public String toString(){        
+		return "["+this.variantID+"]@"+this.host;
 	}
-	
+	*/
 }
