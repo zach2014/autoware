@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.openqa.selenium.WebDriver;
 
+import com.jcraft.jsch.IdentityRepository;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -22,10 +23,13 @@ public class CPE implements SSH, WEB {
 	public static final String DEF_USER = "root";
 	public static final String DEF_PASSWD = "root";
 	public static final String DEF_HOST_IP = "192.168.1.1";
+	static final String S_H_CHECKING = "StrictHostKeyChecking";
 	
 	private List<Account> accounts= new ArrayList<Account>();
 	private String host = DEF_HOST_IP; // ipv4 address in string
 	private String SW = NG_DEF_SW_FG;
+	private Session ssh_Conn = null;
+	private WebDriver web_Conn = null;
 	
 	/*read-only attributes*/
 	private String variantID;    /*which identify the available modules/services set*/
@@ -90,6 +94,18 @@ public class CPE implements SSH, WEB {
 		return false;
 	}
 	
+	public boolean enabledSSH(Session conn){
+		if(this.ssh_Conn!= null && this.ssh_Conn.isConnected()){
+			return true;
+		} else {
+			if(conn.isConnected()){ 
+				this.ssh_Conn = conn;
+				return true;
+			}
+			else return false;
+		}
+	}
+	
 	public String toString(){        
 		return "[CPE-"+this.variantID+"]@"+this.host;
 	}
@@ -102,8 +118,17 @@ public class CPE implements SSH, WEB {
 	public Session openSSH(Account ssh_Account, String key_file) {
 		Session ssh=null;
 		JSch jsch = new JSch();
+		if(! key_file.isEmpty())
+			try {
+				jsch.addIdentity(key_file);
+			} catch (JSchException e1) {
+				e1.printStackTrace();
+			}
 		try {
 			ssh = jsch.getSession(ssh_Account.getUserName(),this.host);
+			ssh.setConfig(S_H_CHECKING, "no");
+			ssh.setPassword(ssh_Account.getPassword());
+			ssh.connect();
 		} catch (JSchException e) {
 			e.printStackTrace();
 		}
