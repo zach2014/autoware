@@ -1,12 +1,14 @@
 package com.tch.common;
 
 public class Account {
+	public static final String STR_ROOT = "root";
+	
 	private String userName;
 	private String password;
 	
 	public Account(){
-		this.userName = "root";
-		this.password = "root";
+		this.userName = STR_ROOT;
+		this.password = STR_ROOT;
 	}
 	public Account(String userName, String passwd) {
 		this.userName = userName;
