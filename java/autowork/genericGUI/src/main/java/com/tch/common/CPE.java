@@ -1,13 +1,15 @@
 package com.tch.common;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Properties;
 
 import org.openqa.selenium.WebDriver;
 
-import com.jcraft.jsch.IdentityRepository;
+import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -17,139 +19,118 @@ import com.jcraft.jsch.Session;
  * 
  */
 public class CPE implements SSH, WEB {
-	
-	public static final String NG_DEF_SW_FG = "OpenWrt";
-	public static final String DEF_SW_FG = "Legacy";
-	public static final String DEF_USER = "root";
-	public static final String DEF_PASSWD = "root";
-	public static final String DEF_HOST_IP = "192.168.1.1";
+
+	/*
+	 * public static final String NG_DEF_SW_FG = "OpenWrt"; public static final
+	 * String DEF_SW_FG = "Legacy"; public static final String DEF_USER =
+	 * "root"; public static final String DEF_PASSWD = "root"; public static
+	 * final String DEF_HOST_IP = "192.168.1.1";
+	 */
+
 	static final String S_H_CHECKING = "StrictHostKeyChecking";
-	
-	private List<Account> accounts= new ArrayList<Account>();
-	private String host = DEF_HOST_IP; // ipv4 address in string
-	private String SW = NG_DEF_SW_FG;
+	static final String UNKNOWN = "unknown";
+	static final String CPE_DEF_HOST_IP = "192.168.1.1"; // ipv4 address in
+															// string private
+	static final String NG_SW = "openwrt";
+	private static final long WAIT_4_CH_CLS = 1000;
+
+	private Properties prop = new Properties();
 	private Session ssh_Conn = null;
 	private WebDriver web_Conn = null;
-	
-	/*read-only attributes*/
-	private String variantID;    /*which identify the available modules/services set*/
-	
-	
-	public CPE(String varID){
-		this.accounts.add(new Account());
-		this.host = DEF_HOST_IP;
-		this.variantID = varID;
-	}
-	
-	public CPE(String varID,String host){
-		this.accounts.add(new Account());
-		this.host = host;
-		this.variantID = varID;
-	}
-	
-	public CPE(String varID, String userName, String passwd){
-		this.accounts.add(new Account(userName, passwd));
-		this.variantID = varID;
-	}
-	
-	public CPE(String varID, List<Account> accounts, String hostIP){
-		this.accounts.addAll(accounts);
-		this.host = hostIP;
-		this.variantID = varID;
-	}
-	
-	public String getVariantID(){
-		return this.variantID;
-	}
-	
-	public void setHost(String ipString){
-		host = ipString;
-	}
-	public String getHost(){
-		return this.host;
-	}
-	
-	public String getSW() {
-		return SW;
+
+	public CPE() throws IOException {
+		prop.load(this.getClass().getClassLoader()
+				.getResourceAsStream("cpe.properties"));
 	}
 
-	public void setSW(String sW) {
-		SW = sW;
+	public String getVariantID() {
+		return prop.getProperty("CPE.platform", UNKNOWN);
 	}
-	
-	public InetAddress getV4Address() throws UnknownHostException{
-		return InetAddress.getByName(host);
+
+	public String getHost() {
+		return prop.getProperty("CPE.hostip", CPE_DEF_HOST_IP);
 	}
-		
-	public boolean addAccount(Account account){
-		return this.accounts.add(account);
+
+	public String getSW() {
+		return prop.getProperty("CPE.CPE.sw", NG_SW) + "-"
+				+ prop.getProperty("CPE.CPE.sw.ver");
 	}
-	
-	public boolean delAccount(String userName){
-		for(Account a : this.accounts){
-			if(a.getUserName().equals(userName)){
-				return this.accounts.remove(a);
+
+	public String showVersion(String ch) {
+		// use shell|web to show software version
+		return null;
+	}
+
+	public String toString() {
+		return "[CPE-" + this.getVariantID() + "]@" + this.getHost();
+	}
+
+	protected boolean openSSH() throws JSchException {
+		if (this.ssh_Conn == null) {
+			JSch.setConfig(S_H_CHECKING, "no");
+			JSch jsch = new JSch();
+			ssh_Conn = jsch.getSession(prop.getProperty("ssh.username"),
+					this.getHost());
+			// ssh_Conn.setPassword(prop.getProperty("ssh.password"));
+			if (prop.getProperty("CPE.ssh.id").isEmpty()) {
+				ssh_Conn.connect();
+			} else {
+				jsch.addIdentity(prop.getProperty("CPE.ssh.id"));
+				ssh_Conn.connect();
 			}
 		}
-		return false;
-	}
-	
-	public boolean enabledSSH(Session conn){
-		if(this.ssh_Conn!= null && this.ssh_Conn.isConnected()){
+		if (ssh_Conn.isConnected())
 			return true;
-		} else {
-			if(conn.isConnected()){ 
-				this.ssh_Conn = conn;
-				return true;
-			}
-			else return false;
-		}
-	}
-	
-	public String toString(){        
-		return "[CPE-"+this.variantID+"]@"+this.host;
+		return false;
 	}
 
 	public WebDriver openWEB() {
 		// TODO Auto-generated method stub
-		return null;
+		web_Conn = null;
+		return web_Conn;
 	}
 
-	public Session openSSH(Account ssh_Account, String key_file) {
-		Session ssh=null;
-		JSch jsch = new JSch();
-		if(! key_file.isEmpty())
+	public String remoteExec(String command_str) throws IOException,
+			JSchException {
+		StringBuffer re = new StringBuffer();
+		// make sure ssh connection is connected firstly
+		if (ssh_Conn == null)
+			openSSH();
+		if (!ssh_Conn.isConnected())
+			ssh_Conn.connect();
+		
+		ChannelExec ssh_Ch = (ChannelExec) ssh_Conn.openChannel("exec");
+		ssh_Ch.setCommand(command_str);
+		ssh_Ch.setInputStream(null);
+		ssh_Ch.setErrStream(System.err);
+		InputStream is = ssh_Ch.getInputStream();
+		Reader reader = new InputStreamReader(is);
+		BufferedReader buffered = new BufferedReader(reader);
+		ssh_Ch.connect();
+		
+		// wait for channel closed
+		while (!ssh_Ch.isClosed())
 			try {
-				jsch.addIdentity(key_file);
-			} catch (JSchException e1) {
-				e1.printStackTrace();
+				Thread.sleep(WAIT_4_CH_CLS);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-		try {
-			ssh = jsch.getSession(ssh_Account.getUserName(),this.host);
-			ssh.setConfig(S_H_CHECKING, "no");
-			ssh.setPassword(ssh_Account.getPassword());
-			ssh.connect();
-		} catch (JSchException e) {
-			e.printStackTrace();
+		Integer exit_S = ssh_Ch.getExitStatus();
+		if (0 == exit_S) { // retrieve output of cmd
+			String line = buffered.readLine();
+			while (line != null){
+				re.append(line);
+				line = buffered.readLine();
+			}
+			is.close();
+		} else {
+			System.out.println("Command exit:" + exit_S);
 		}
-		return ssh;
+		ssh_Ch.disconnect();
+		return re.toString();
 	}
-	
-	/*
-	public void setServices(Set<String> services){
-		this.services = services;
+
+	public void remoteClose() {
+		ssh_Conn.disconnect();
 	}
-	
-	public boolean isEnabled(String service){
-		return this.services.contains(service);
-	}
-	
-	public void enableService(String service){
-		this.services.add(service);
-	}
-	
-	public void disableService(String service){
-		services.remove(service);
-	}
-	*/
 }
