@@ -5,30 +5,27 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
 
+import com.tch.common.CPE;
 import com.tch.gui.page.main.GatewayHomePage;
 
 public class GatewayHomePageTest {
-	private static WebDriver driver; 
+	private static CPE gw; 
 	private GatewayHomePage onTest;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		driver = new FirefoxDriver();
+		gw = new CPE();
 	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		driver.close();
-		driver.quit();
+		gw.closeWEB();
 	}
 
 	@Before
 	public void setUp() throws Exception {
-		driver.get("http://192.168.1.1");
-		onTest = new GatewayHomePage(driver);
+		onTest = new GatewayHomePage(gw.getGWHomePage());
 	}
 
 	@After
@@ -48,7 +45,7 @@ public class GatewayHomePageTest {
 	@Test
 	public void testLogout() {
 		onTest.logout();
-		onTest.login().loginAs("admin", "admin");
+		onTest.login().loginAs("admin", "TF074ZQT");
 		onTest.logout();
 	}
 

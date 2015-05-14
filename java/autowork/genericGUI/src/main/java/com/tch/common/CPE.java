@@ -6,8 +6,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.ie.InternetExplorerDriver;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
@@ -84,12 +88,32 @@ public class CPE implements SSH, WEB {
 		return false;
 	}
 
-	public WebDriver openWEB() {
-		// TODO Auto-generated method stub
-		web_Conn = null;
+	public boolean openWEB() {
+		String browser= prop.getProperty("GUI.browser", "firefox");
+		long pageLoadTimer = Long.parseLong(prop.getProperty("GUI.timer.pageload", "5"));
+		long implWaitTime = Long.parseLong(prop.getProperty("GUI.timer.implicitlyWait", "3"));
+		if("chrome".equalsIgnoreCase(browser)) web_Conn = new ChromeDriver();
+		else if("ie".equalsIgnoreCase(browser)) web_Conn = new InternetExplorerDriver();
+		else web_Conn = new FirefoxDriver();
+
+		web_Conn.manage().timeouts().pageLoadTimeout(pageLoadTimer, TimeUnit.SECONDS);
+		web_Conn.manage().timeouts().implicitlyWait(implWaitTime, TimeUnit.SECONDS);
+		return (null != web_Conn);
+	}
+	
+	public WebDriver getGWHomePage(){
+		getGWHomePage("http://" + getHost());
 		return web_Conn;
 	}
-
+	
+	public WebDriver getGWHomePage(String url){
+		if(web_Conn == null){
+			openWEB();
+		}
+		web_Conn.get(url);
+		return web_Conn;
+	}
+	
 	public String remoteExec(String command_str) throws IOException,
 			JSchException {
 		StringBuffer re = new StringBuffer();
@@ -130,7 +154,12 @@ public class CPE implements SSH, WEB {
 		return re.toString();
 	}
 
-	public void remoteClose() {
-		ssh_Conn.disconnect();
+	public void closeSSH() {
+		if(ssh_Conn != null && ssh_Conn.isConnected()) ssh_Conn.disconnect();
+	}
+	
+	
+	public void closeWEB(){
+		if(web_Conn != null) web_Conn.quit();
 	}
 }

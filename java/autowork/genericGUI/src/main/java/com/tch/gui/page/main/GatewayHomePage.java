@@ -5,8 +5,6 @@ package com.tch.gui.page.main;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.TimeUnit;
-import java.util.Properties;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -20,14 +18,10 @@ import com.tch.gui.page.modal.Modal;
  *
  */
 public class GatewayHomePage {
-	private static Properties prop = new Properties();
 	private final WebDriver homeP; 
-	private static final Integer PAGE_LOAD_DELAY=null;
 	
-	public GatewayHomePage(WebDriver driver){
-		homeP = driver;
-		homeP.manage().timeouts().pageLoadTimeout(5, TimeUnit.SECONDS);
-		homeP.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+	public GatewayHomePage(WebDriver browser){
+		homeP = browser;
 		if(!"Gateway".equalsIgnoreCase(homeP.getTitle())){
 			throw new IllegalStateException("This is not Gateway home page!");
 		}

@@ -2,13 +2,13 @@ package com.tch.common;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.openqa.selenium.WebDriver;
 
 import com.jcraft.jsch.JSchException;
 
@@ -29,9 +29,12 @@ public class CPETest {
 
 	@Test
 	public void testOpenWEB() {
-		fail("Not yet implemented");
+		WebDriver browser = gw.getGWHomePage();
+		String hTitle = browser.getTitle();
+		assertEquals("Gateway", hTitle);
+		browser.close();
 	}
-
+	
 	@Test
 	public void testOpenSSH() throws JSchException {
 		assertTrue(gw.openSSH());
@@ -44,4 +47,5 @@ public class CPETest {
 		String re = gw.remoteExec(uci_show + wan_ifname);
 		assertEquals(wan_ifname+"=atm_8_35", re);
 	}
+	
 }
