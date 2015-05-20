@@ -25,7 +25,7 @@ public class GatewayHomePageTest {
 
 	@Before
 	public void setUp() throws Exception {
-		onTest = new GatewayHomePage(gw.getGWHomePage());
+		onTest = new GatewayHomePage(gw.getWebPage());
 	}
 
 	@After
@@ -39,13 +39,13 @@ public class GatewayHomePageTest {
 
 	@Test
 	public void testLogin() {
-		onTest.login();
+		onTest.goLogin();
 	}
 
 	@Test
-	public void testLogout() {
+	public void testLogout() throws InterruptedException {
 		onTest.logout();
-		onTest.login().loginAs("admin", "TF074ZQT");
+		onTest.goLogin().login("admin", "TF074ZQT");
 		onTest.logout();
 	}
 

@@ -18,46 +18,52 @@ import com.tch.gui.page.modal.Modal;
  *
  */
 public class GatewayHomePage {
-	private final WebDriver homeP; 
+	protected static final String HOMEPAGE_TITLE = "Gateway";
+	protected static final String CLS_SMALLCARD = "smallcard";
+	private final WebDriver browser; 
 	
-	public GatewayHomePage(WebDriver browser){
-		homeP = browser;
-		if(!"Gateway".equalsIgnoreCase(homeP.getTitle())){
+	public GatewayHomePage(WebDriver driver){
+		browser = driver;
+		if(!HOMEPAGE_TITLE.equalsIgnoreCase(browser.getTitle())){
 			throw new IllegalStateException("This is not Gateway home page!");
 		}
 	}
 	
 	public Modal enterModal(int id_card){
-		By cardsLocator = By.className("smallcard");
-		List<WebElement> all_cards_of_home = homeP.findElements(cardsLocator);
+		By cardsLocator = By.className(CLS_SMALLCARD);
+		List<WebElement> all_cards_of_home = browser.findElements(cardsLocator);
 		if(id_card >= all_cards_of_home.size()){
 			throw new NoSuchElementException("No card with index of "+id_card+" in this page!");
 		}
 		all_cards_of_home.get(id_card).click();
-		return new Modal(homeP);
+		return new Modal(browser);
 	}
 	
-	public LoginPage login(){
+	public LoginPage goLogin(){
 		By btn_sign_in = By.id("signin");
-		homeP.findElement(btn_sign_in).click();
-		return new LoginPage(homeP);
+		browser.findElement(btn_sign_in).click();
+		return new LoginPage(browser);
 	}
 	
 	public GatewayHomePage logout(){
 		if(isLogged()){
 			By dropDownToggle = By.cssSelector("button.btn.dropdown-toggle");
 			By btn_logout = By.id("signout");
-			homeP.findElement(dropDownToggle).click();
-			homeP.findElement(btn_logout).click();
+			browser.findElement(dropDownToggle).click();
+			browser.findElement(btn_logout).click();
 		}
-		return new GatewayHomePage(homeP);
+		return new GatewayHomePage(browser);
 	}
 
 	private boolean isLogged() {
-		if(homeP.getPageSource().contains("logged")){
+		if(browser.getPageSource().contains("logged")){
 			return true;
 		}
 		return false;
+	}
+	
+	public WebDriver getBrowser(){
+		return browser;
 	}
 
 }

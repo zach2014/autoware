@@ -29,7 +29,7 @@ public class CPETest {
 
 	@Test
 	public void testOpenWEB() {
-		WebDriver browser = gw.getGWHomePage();
+		WebDriver browser = gw.getWebPage();
 		String hTitle = browser.getTitle();
 		assertEquals("Gateway", hTitle);
 		browser.close();

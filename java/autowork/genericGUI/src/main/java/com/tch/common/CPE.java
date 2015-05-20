@@ -101,7 +101,7 @@ public class CPE implements SSH, WEB {
 		return (null != web_Conn);
 	}
 	
-	public WebDriver getGWHomePage(){
+	public WebDriver getWebPage(){
 		getGWHomePage("http://" + getHost());
 		return web_Conn;
 	}

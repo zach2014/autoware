@@ -3,14 +3,17 @@
  */
 package com.tch.gui.page.main.utest;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import com.tch.common.CPE;
+import com.tch.gui.page.main.GatewayHomePage;
 import com.tch.gui.page.main.LoginPage;
 
 /**
@@ -18,35 +21,16 @@ import com.tch.gui.page.main.LoginPage;
  *
  */
 public class LoginPageTest {
-	private static WebDriver driver; 
-	private static LoginPage onTest;
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		driver  = new FirefoxDriver();
-	}
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-		driver.close();
-		driver.quit();
-	}
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
+	private CPE gw; 
+	private LoginPage onTest;
 	
+	@Rule
+	public ExpectedException ex = ExpectedException.none();
+
+	@Before
 	public void setUp() throws Exception {
-		driver.get("http://192.168.1.1/login.lp");
-		onTest = new LoginPage(driver);
-		
+		gw = new CPE();
+		onTest = (new GatewayHomePage(gw.getWebPage()).goLogin());
 	}
 
 	/**
@@ -54,30 +38,24 @@ public class LoginPageTest {
 	 */
 	@After
 	public void tearDown() throws Exception {
+		onTest = null;
+		gw.closeWEB();
 	}
 
-	/**
-	 * Test method for {@link com.tch.gui.page.main.LoginPage#cancelLogin()}.
-	 */
 	@Test
 	public void testCancelLogin() {
 		onTest.cancelLogin();
 	}
 
-	/**
-	 * Test method for {@link com.tch.gui.page.main.LoginPage#loginAs(java.lang.String, java.lang.String)}.
-	 */
 	@Test
-	public void testLoginAs() {
-		onTest.loginAs("admin", "admin");
+	public void testLogin() throws InterruptedException {
+		boolean login_ok = onTest.login("admin", "TF074ZQT");
+		assertTrue(login_ok);
 	}
-
-	/**
-	 * Test method for {@link com.tch.gui.page.main.LoginPage#loginAsExcetion(java.lang.String, java.lang.String)}.
-	 */
+	
 	@Test
-	public void testLoginAsExcetion() {
-		onTest.loginAsExcetion("admin", "wrong");
+	public void testLoginFail() throws InterruptedException {
+		assertFalse(onTest.login("admin", "wrong_passwd"));
 	}
 
 }

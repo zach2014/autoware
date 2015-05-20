@@ -24,7 +24,7 @@ public class ModalTest {
 	@Before
 	public void setUp() throws Exception {
 		gw = new CPE();
-		WebDriver browser = gw.getGWHomePage();
+		WebDriver browser = gw.getWebPage();
 		onTest = new GatewayHomePage(browser);
 	}
 
@@ -53,7 +53,8 @@ public class ModalTest {
 	public void testCloseCfgPage() {
 		Modal modalP = onTest.enterModal(0);
 		assertTrue(modalP.closeCfgPage());
-		modalP = onTest.enterModal(1);
+		onTest = new GatewayHomePage(modalP.getBrowser());
+		modalP = onTest.enterModal(0);
 		modalP.showAdvanced();
 		assertTrue(modalP.closeCfgPage());		
 	}
