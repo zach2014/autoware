@@ -8,24 +8,23 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.WebDriver;
 
 import com.tch.common.CPE;
-import com.tch.gui.page.main.GatewayHomePage;
+import com.tch.gui.page.main.HomePage;
 import com.tch.gui.page.modal.Modal;
 
 public class ModalTest {
 	private static CPE gw; 
-	GatewayHomePage onTest;
+	Modal onTest;
 	
 	@Rule
 	public ExpectedException ex = ExpectedException.none();
 	
 	@Before
 	public void setUp() throws Exception {
-		gw = new CPE();
-		WebDriver browser = gw.getWebPage();
-		onTest = new GatewayHomePage(browser);
+		CPE.build();
+		gw = CPE.instance;
+		onTest = new Modal(gw, 0);
 	}
 
 	@After
@@ -35,12 +34,11 @@ public class ModalTest {
 
 	@Test
 	public void testShowAdvanced() {
-		Modal modalP = onTest.enterModal(0);
-		assertTrue(modalP.showAdvanced());
-		modalP.hideAdvanced();
-		assertTrue(modalP.showAdvanced());
+		assertTrue(onTest.showAdvanced());
+		onTest.hideAdvanced();
+		assertTrue(onTest.showAdvanced());
 		ex.expect(ElementNotVisibleException.class);
-		modalP.showAdvanced();
+		onTest.showAdvanced();
 	}
 
 	@Test
@@ -51,12 +49,9 @@ public class ModalTest {
 
 	@Test
 	public void testCloseCfgPage() {
-		Modal modalP = onTest.enterModal(0);
-		assertTrue(modalP.closeCfgPage());
-		onTest = new GatewayHomePage(modalP.getBrowser());
-		modalP = onTest.enterModal(0);
-		modalP.showAdvanced();
-		assertTrue(modalP.closeCfgPage());		
+		HomePage home = onTest.closeCfgPage();
+		Modal modalP = home.enterModal(0);
+		assertTrue(modalP.showAdvanced());		
 	}
 
 	@Test
@@ -68,9 +63,8 @@ public class ModalTest {
 
 	@Test
 	public void testCancelChanges() {
-		Modal modalP = onTest.enterModal(0);
 		ex.expect(ElementNotVisibleException.class);
-		assertTrue(modalP.cancelChanges());
+		assertNotNull(onTest.cancelChanges());
 	}
 
 }

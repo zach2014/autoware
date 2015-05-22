@@ -7,15 +7,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.tch.common.CPE;
-import com.tch.gui.page.main.GatewayHomePage;
+import com.tch.gui.page.main.HomePage;
 
-public class GatewayHomePageTest {
+public class HomePageTest {
 	private static CPE gw; 
-	private GatewayHomePage onTest;
+	private HomePage onTest;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		gw = new CPE();
+		CPE.build();
+		gw = CPE.instance;
 	}
 
 	@AfterClass
@@ -25,7 +26,7 @@ public class GatewayHomePageTest {
 
 	@Before
 	public void setUp() throws Exception {
-		onTest = new GatewayHomePage(gw.getWebPage());
+		onTest = new HomePage(gw);
 	}
 
 	@After

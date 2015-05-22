@@ -18,15 +18,28 @@ public class CPETest {
 
 	@Before
 	public void setUp() throws Exception {
-		gw = new CPE();
-		System.out.println(gw.toString());
+		CPE.build("/local/repo/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe.properties");
+		gw = CPE.instance;
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		gw = null;
+		CPE.reset();
 	}
 
+	@Test
+	public void testSingleton() throws IOException{
+		CPE gw1 = CPE.instance;
+		assertTrue(gw1 == gw);
+		CPE.reset();
+		gw1 = CPE.instance;
+		assertTrue(gw1 == gw);
+		CPE.build();
+		gw1 = CPE.instance;
+		assertTrue(gw1 == gw);		
+	}
+	
 	@Test
 	public void testOpenWEB() {
 		WebDriver browser = gw.getWebPage();
@@ -45,7 +58,7 @@ public class CPETest {
 		String uci_show = "uci show ";
 		String wan_ifname = "network.wan.ifname";
 		String re = gw.remoteExec(uci_show + wan_ifname);
-		assertEquals(wan_ifname+"=atm_8_35", re);
+		assertEquals(wan_ifname+"=\'eth4\'", re);
 	}
 	
 }

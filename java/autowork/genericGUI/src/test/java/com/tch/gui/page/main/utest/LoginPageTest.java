@@ -13,7 +13,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.tch.common.CPE;
-import com.tch.gui.page.main.GatewayHomePage;
 import com.tch.gui.page.main.LoginPage;
 
 /**
@@ -29,8 +28,9 @@ public class LoginPageTest {
 
 	@Before
 	public void setUp() throws Exception {
-		gw = new CPE();
-		onTest = (new GatewayHomePage(gw.getWebPage()).goLogin());
+		CPE.build();
+		gw = CPE.instance;
+		onTest =  new LoginPage(gw);
 	}
 
 	/**

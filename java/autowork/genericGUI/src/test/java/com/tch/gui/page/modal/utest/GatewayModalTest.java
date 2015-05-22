@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.tch.common.CPE;
-import com.tch.gui.page.main.GatewayHomePage;
 import com.tch.gui.page.modal.GatewayModal;
 
 public class GatewayModalTest {
@@ -16,8 +15,9 @@ public class GatewayModalTest {
 
 	@Before
 	public void setUp() throws Exception {
-		gw = new CPE();
-		onTest = new GatewayModal((new GatewayHomePage(gw.getWebPage())).enterModal(0).getBrowser());
+		CPE.build();
+		gw = CPE.instance;
+		onTest = new GatewayModal(gw);
 	}
 
 	@After
@@ -35,12 +35,12 @@ public class GatewayModalTest {
 
 	@Test
 	public void testCloseCfgPage() {
-		assertTrue(onTest.closeCfgPage());
+		assertNotNull(onTest.closeCfgPage());
 	}
 
 	@Test
 	public void testFadeoutModal() {
-		assertTrue(onTest.fadeoutModal());
+		assertNotNull(onTest.fadeoutModal());
 	}
 
 }
