@@ -8,7 +8,10 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.tch.common.CPE;
 import com.tch.gui.page.main.HomePage;
@@ -19,54 +22,47 @@ import com.tch.gui.page.main.HomePage;
  */
 public class Modal extends HomePage {
 
-	protected static final String ID_CLOSE_CONFIG = "close-config";
-	protected static final String ID_SAVE_CONFIG = "save-config";
-	protected static final String ID_CANCEL_CONFIG = "cancel-config";
-	protected static final String CLS_ICON_REFRESH = "icon-refresh";
-	protected static final String CLS_ICON_PLUS = "icon-plus-sign";
-	protected static final String CLS_ICON_MINUS = "icon-minus-sign";
-	protected static final String CLS_ICON_REMOVE = "icon-remove";
+	public static final String ID_CLOSE_CONFIG = "close-config";
+	public static final String ID_SAVE_CONFIG = "save-config";
+	public static final String ID_CANCEL_CONFIG = "cancel-config";
+	public static final String CLS_ICON_REFRESH = "icon-refresh";
+	public static final String CLS_ICON_PLUS = "icon-plus-sign";
+	public static final String CLS_ICON_MINUS = "icon-minus-sign";
+	public static final String CLS_ICON_REMOVE = "icon-remove";
 
 	static final Logger loger = LogManager.getLogger(Modal.class.getName());
 
-	public Modal(CPE cpe, Integer id){
+	public Modal(CPE cpe, Integer id) {
 		super(cpe);
-		try{
-			page.findElements(By.className(HomePage.CLS_SMALLCARD)).get(id).click();
-		} catch (NoSuchElementException noe){
-			loger.error(noe.getMessage());
-			throw new IllegalArgumentException("id of modal is out of page");
-		}
+		page.findElements(By.className(HomePage.CLS_SMALLCARD)).get(id).click();
 		By card_modal = By.className("modal");
 		try {
-			page.findElement(card_modal);
-		} catch (NoSuchElementException e) {
-			loger.error(e.getMessage());
-			throw new IllegalStateException("This is not config card page!");
+			WebDriverWait wait = new WebDriverWait(page, Long.parseLong(cpe.readProp("GUI.timer.explicitlyWait")));
+			wait.until(ExpectedConditions.presenceOfElementLocated(card_modal));
+		} catch (TimeoutException toe) {
+			loger.error(toe.getMessage());
+			throw new IllegalStateException("Enter modal config card with exception");
 		}
 	}
 
-	public boolean showAdvanced() throws NoSuchElementException,
+	public void showAdvanced() throws NoSuchElementException,
 			ElementNotVisibleException {
 		By by_plus_icon = By.className(CLS_ICON_PLUS);
 		WebElement icon_plus = page.findElement(by_plus_icon);
 		icon_plus.click();
-		return true;
 	}
 
-	public boolean hideAdvanced() throws NoSuchElementException,
+	public void hideAdvanced() throws NoSuchElementException,
 			ElementNotVisibleException {
 		By by_icon_minus = By.className(CLS_ICON_MINUS);
 		WebElement icon_minus = page.findElement(by_icon_minus);
 		icon_minus.click();
-		return true;
 	}
 
-	public boolean refreshData() throws NoSuchElementException {
+	public void refreshData() throws NoSuchElementException {
 		By by_refresh_icon = By.className(CLS_ICON_REFRESH);
 		WebElement icon_refresh = page.findElement(by_refresh_icon);
 		icon_refresh.click();
-		return true;
 	}
 
 	public HomePage closeCfgPage() throws NoSuchElementException,
@@ -100,3 +96,4 @@ public class Modal extends HomePage {
 		return this;
 	}
 }
+  

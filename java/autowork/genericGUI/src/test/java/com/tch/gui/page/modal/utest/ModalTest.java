@@ -1,9 +1,14 @@
 package com.tch.gui.page.modal.utest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -20,23 +25,32 @@ public class ModalTest {
 	@Rule
 	public ExpectedException ex = ExpectedException.none();
 	
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setUpBeforeClass() throws IOException {
 		CPE.build();
 		gw = CPE.instance;
+	}
+	
+	@Before
+	public void setUp() throws Exception {
 		onTest = new Modal(gw, 0);
 	}
 
 	@After
 	public void tearDown() throws Exception {
+		onTest = null;
+	}
+	
+	@AfterClass
+	public static void tearDownAfterClass(){
 		gw.closeWEB();
 	}
 
 	@Test
 	public void testShowAdvanced() {
-		assertTrue(onTest.showAdvanced());
+		onTest.showAdvanced();
 		onTest.hideAdvanced();
-		assertTrue(onTest.showAdvanced());
+		onTest.showAdvanced();
 		ex.expect(ElementNotVisibleException.class);
 		onTest.showAdvanced();
 	}
@@ -44,14 +58,14 @@ public class ModalTest {
 	@Test
 	public void testRefreshData() {
 		Modal modalP = onTest.enterModal(0);
-		assertTrue(modalP.refreshData());
+		modalP.refreshData();
 	}
 
 	@Test
 	public void testCloseCfgPage() {
 		HomePage home = onTest.closeCfgPage();
 		Modal modalP = home.enterModal(0);
-		assertTrue(modalP.showAdvanced());		
+		modalP.showAdvanced();		
 	}
 
 	@Test

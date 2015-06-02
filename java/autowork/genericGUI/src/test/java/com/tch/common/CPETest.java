@@ -14,11 +14,11 @@ import com.jcraft.jsch.JSchException;
 
 public class CPETest {
 
-	public CPE gw;
+	private CPE gw;
 
 	@Before
 	public void setUp() throws Exception {
-		CPE.build("/local/repo/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe.properties");
+		CPE.build("/Users/zach15/repos/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe.properties");
 		gw = CPE.instance;
 	}
 
@@ -59,6 +59,5 @@ public class CPETest {
 		String wan_ifname = "network.wan.ifname";
 		String re = gw.remoteExec(uci_show + wan_ifname);
 		assertEquals(wan_ifname+"=\'eth4\'", re);
-	}
-	
+	}	
 }

@@ -20,10 +20,16 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.tch.gui.page.main.HomePage;
+import com.tch.gui.page.main.LoginPage;
 
 /**
  * @author zengjp
  * 
+ */
+/**
+ * @author zach15
+ *
  */
 public class CPE implements SSH, WEB {
 
@@ -40,6 +46,7 @@ public class CPE implements SSH, WEB {
 	private static final String S_H_CHECKING = "StrictHostKeyChecking";
 	private static final long WAIT_4_CH_CLS = 1000;
 	private static final String CPE_DEF_PROP_FILE = "cpe.properties";
+	private static final String PASSWD_CLI = "cat /proc/rip/0124 | head -c 8";
 
 	private String variant;
 	private String host;
@@ -66,7 +73,11 @@ public class CPE implements SSH, WEB {
 	}
 	
 	public static void reset(){
-		instance.ssh_Conn = null;
+		if (instance.ssh_Conn != null && instance.ssh_Conn.isConnected()) {
+			instance.closeSSH();
+			instance.ssh_Conn = null;
+		}
+		instance.closeWEB();
 		instance.web_Conn = null;
 		instance.prop = new Properties();
 	}
@@ -132,7 +143,7 @@ public class CPE implements SSH, WEB {
 	}
 
 	public WebDriver getWebPage() {
-		getWebPage("http://" + getHost());
+		getWebPage(getHPageURL());
 		return web_Conn;
 	}
 
@@ -184,14 +195,22 @@ public class CPE implements SSH, WEB {
 		return re.toString();
 	}
 
+	/**
+	 * To close the remote SSH session to CPE
+	 */
 	public void closeSSH() {
 		if (ssh_Conn != null && ssh_Conn.isConnected())
 			ssh_Conn.disconnect();
 	}
-
+	
+	/** 
+	 * To close the web connection of CPE, quit the web driver
+	 */
 	public void closeWEB() {
-		if (web_Conn != null)
+		if (web_Conn != null) {
+			web_Conn.close();
 			web_Conn.quit();
+		}
 	}
 
 	protected boolean openSSH() throws JSchException {
@@ -218,8 +237,8 @@ public class CPE implements SSH, WEB {
 			loger.info("Being setup CPE's properties accordingly.");
 			variant = prop.getProperty("CPE.platform", EMPTY_STR);
 			host = prop.getProperty("CPE.hostip", DEF_HOST_IP);
-			page_hm_title = prop.getProperty("GUI.home.title", EMPTY_STR);
-			page_login_title = prop.getProperty("GUI.login.title", EMPTY_STR);
+			page_hm_title = prop.getProperty("GUI.home.title", HomePage.HOMEPAGE_TITLE);
+			page_login_title = prop.getProperty("GUI.login.title", LoginPage.LOGINPAGE_TITLE);
 			page_hm_guest_crds = Integer.parseInt(prop.getProperty(
 					"GUI.home.guest.cards", "0"));
 			page_hm_admin_crds = Integer.parseInt(prop.getProperty(
@@ -232,6 +251,30 @@ public class CPE implements SSH, WEB {
 		loger.trace("GUI.login.title="+page_login_title);
 		loger.trace("GUI.login.url="+page_login_url);
 	}
+
+	public String getWebUser() {
+		String givenUser = readProp("web.username");
+		if (null == givenUser) return "admin";
+		return givenUser;
+	}
+	
+	public String getWebPasswd() throws IOException, JSchException {
+		String givenPass = readProp("web.password");
+		if (null == givenPass){
+			// try to get password from /proc/erip/0124
+			givenPass = remoteExec(PASSWD_CLI);
+		}
+		return givenPass;
+	}
+
+	public String getHPageURL() {
+		String givenUrl = this.readProp("GUI.home.url");
+		if (null == givenUrl) {
+			givenUrl = "http://" + getHost();
+		}
+		return givenUrl;
+	}
+	
 
 
 }
