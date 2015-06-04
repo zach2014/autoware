@@ -57,8 +57,10 @@ public class ModalTest {
 
 	@Test
 	public void testRefreshData() {
-		Modal modalP = onTest.enterModal(0);
-		modalP.refreshData();
+		onTest.refreshData();
+		HomePage hp = onTest.fadeoutModal();
+		onTest = hp.enterModal(0);
+		onTest.refreshData();
 	}
 
 	@Test
@@ -78,7 +80,16 @@ public class ModalTest {
 	@Test
 	public void testCancelChanges() {
 		ex.expect(ElementNotVisibleException.class);
+		HomePage hm = onTest.cancelChanges();
+		hm.enterModal(1);
 		assertNotNull(onTest.cancelChanges());
+	}
+	
+	@Test
+	public void testFadeoutModal(){
+		HomePage hm = onTest.fadeoutModal();
+		hm.enterModal(1);
+		assertNotNull(onTest.fadeoutModal());
 	}
 
 }

@@ -139,6 +139,8 @@ public class CPE implements SSH, WEB {
 				.pageLoadTimeout(pageLoadTimer, TimeUnit.SECONDS);
 		web_Conn.manage().timeouts()
 				.implicitlyWait(implWaitTime, TimeUnit.SECONDS);
+
+		web_Conn.manage().window().maximize();
 		return (null != web_Conn);
 	}
 

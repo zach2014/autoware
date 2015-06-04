@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.jcraft.jsch.JSchException;
 import com.tch.common.CPE;
@@ -34,6 +35,10 @@ public class HomePage {
 	
 	protected final CPE cpe;
 	protected WebDriver  page;
+	/**
+	 * To wait explicitly
+	 */
+	protected final WebDriverWait waiter;
 	
 	/**
 	 * To check the page if show whether login or not
@@ -80,22 +85,15 @@ public class HomePage {
 		}
 	}
 	
+	
+	/**
+	 * Constructor for initiating home page
+	 * @param gw
+	 */
 	public HomePage(CPE gw) {
 		this.cpe = gw;
 		this.page = cpe.getWebPage();
-		HomePage.requireLogin(cpe, page);
-		if (! cpe.getHPageTitle().equalsIgnoreCase(page.getTitle())){
-			loger.error("The title of current page is " + page.getTitle() + " not " + cpe.getHPageTitle() );
-			throw new IllegalStateException("Not Gateway HomePage as expected");
-		} else if (cpe.getHpageCards("guest") > page.findElements(By.className(CLS_SMALLCARD)).size()){
-			loger.warn("Can't not load whole homepage");
-			throw new IllegalStateException("Need more time for loading page");
-		}
-	}
-
-	public HomePage(CPE gw, String url){
-		this.cpe = gw;
-		this.page = cpe.getWebPage(url);
+		this.waiter = new WebDriverWait(page, Long.parseLong(cpe.readProp("GUI.timer.explicitlyWait")));
 		HomePage.requireLogin(cpe, page);
 		if (! cpe.getHPageTitle().equalsIgnoreCase(page.getTitle())){
 			loger.error("The title of current page is " + page.getTitle() + " not " + cpe.getHPageTitle() );
@@ -106,9 +104,16 @@ public class HomePage {
 		}
 	}
 	
-	public HomePage(LoginPage loginPage) {
-		cpe = loginPage.getCPE();
-		page = loginPage.getPage();
+	/**
+	 * Constructor for initiating home page, specify the home page URL
+	 * @param gw
+	 * @param url
+	 */
+	public HomePage(CPE gw, String url){
+		this.cpe = gw;
+		this.page = cpe.getWebPage(url);
+		this.waiter = new WebDriverWait(page, Long.parseLong(cpe.readProp("GUI.timer.explicitlyWait")));
+		HomePage.requireLogin(cpe, page);
 		if (! cpe.getHPageTitle().equalsIgnoreCase(page.getTitle())){
 			loger.error("The title of current page is " + page.getTitle() + " not " + cpe.getHPageTitle() );
 			throw new IllegalStateException("Not Gateway HomePage as expected");
@@ -116,6 +121,34 @@ public class HomePage {
 			loger.warn("Can't not load whole homepage");
 			throw new IllegalStateException("Need more time for loading page");
 		}
+	}
+	
+	
+	/**
+	 * Constructor for cancel/complete login to home page
+	 * @param loginPage
+	 */
+	public HomePage(LoginPage loginPage) {
+		cpe = loginPage.getCPE();
+		page = loginPage.getPage();
+		this.waiter = new WebDriverWait(page, Long.parseLong(cpe.readProp("GUI.timer.explicitlyWait")));
+		if (! cpe.getHPageTitle().equalsIgnoreCase(page.getTitle())){
+			loger.error("The title of current page is " + page.getTitle() + " not " + cpe.getHPageTitle() );
+			throw new IllegalStateException("Not Gateway HomePage as expected");
+		} else if (cpe.getHpageCards("guest") > page.findElements(By.className(CLS_SMALLCARD)).size()){
+			loger.warn("Can't not load whole homepage");
+			throw new IllegalStateException("Need more time for loading page");
+		}
+	}
+
+	/**
+	 * Constructor for fading out modal configure card to home page
+	 * @param modal
+	 */
+	public HomePage(Modal modal) {
+		page = modal.getPage();
+		cpe = modal.getCPE();
+		this.waiter = new WebDriverWait(page, Long.parseLong(cpe.readProp("GUI.timer.explicitlyWait")));
 	}
 
 	public CPE getCPE(){
