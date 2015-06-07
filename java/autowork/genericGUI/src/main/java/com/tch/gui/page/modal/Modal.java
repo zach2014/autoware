@@ -30,12 +30,14 @@ public class Modal extends HomePage {
 	public static final String CLS_ICON_PLUS = "icon-plus-sign";
 	public static final String CLS_ICON_MINUS = "icon-minus-sign";
 	public static final String CLS_ICON_REMOVE = "icon-remove";
+	public static final By BY_CLS_MDAL_BDY = By.className("modal-body");
 
 	static final Logger loger = LogManager.getLogger(Modal.class.getName());
+	
 
 	public Modal(CPE cpe, Integer id) {
 		super(cpe);
-		List<WebElement> cards = waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.className(HomePage.CLS_SMALLCARD)));
+		List<WebElement> cards = waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(HomePage.BY_CLS_SCARD));
 		//page.findElements(By.className(HomePage.CLS_SMALLCARD)).get(id).click();
 		cards.get(id).click();
 		By card_modal = By.className("modal");
@@ -88,7 +90,7 @@ public class Modal extends HomePage {
 		By by_btn_save = By.id(ID_SAVE_CONFIG);
 		WebElement btn_save = page.findElement(by_btn_save);
 		btn_save.click();
-		waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.className(CLS_SMALLCARD)));
+		waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(HomePage.BY_CLS_SCARD));
 		return true;
 	}
 

@@ -6,8 +6,11 @@ package com.tch.gui.page.main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.tch.common.CPE;
 
@@ -17,13 +20,12 @@ import com.tch.common.CPE;
  */
 public class LoginPage {
 
+	public static final By BY_CANCEL_LINK = By.linkText("Cancel");
 	private static final String EX_MSG_LOGIN_FAIL = "Fail to login with exception";
-	public static final String LOGINPAGE_TITLE = "Login";
 	protected static final String LOGIN_ERR_MSG = "Invalid Username or Password";
-	protected static final String ID_SIGN_ME_IN = "sign-me-in";
-	protected static final String ID_PASSWORD_INPUT = "srp_password";
-	protected static final String ID_USERNAME_INPUT = "srp_username";
-	protected static final String ID_SRP_ERROR = "erroruserpass";
+	public static final By BY_SIGN_ME_IN = By.id("sign-me-in");
+	public static final By BY_PASSWD_INPUT = By.id("srp_password");
+	public static final By BY_USRNM_INPUT = By.id("srp_username");
 
 	static final Logger loger = LogManager.getLogger(LoginPage.class.getName());
 
@@ -33,11 +35,12 @@ public class LoginPage {
 	public LoginPage(CPE gw) {
 		cpe = gw;
 		page = gw.getWebPage();
-		page.findElement(By.id(HomePage.ID_BTN_SIGNIN)).click();
+		page.findElement(HomePage.BY_BTN_SIGNIN).click();
 		if (!cpe.getLPageTitle().equalsIgnoreCase(page.getTitle())) {
 			loger.error("The title of current page is " + page.getTitle()
 					+ " not " + cpe.getLPageTitle());
-			throw new IllegalStateException("Not Gateway LoginPage as expected");
+			throw new IllegalStateException(
+					"Fail to open LoginPage as expected");
 		}
 	}
 
@@ -45,10 +48,10 @@ public class LoginPage {
 		cpe = gw;
 		page = gw.getWebPage(url);
 		if (!cpe.getLPageTitle().equalsIgnoreCase(page.getTitle())) {
-			loger.error("The title of current page is " + "\'"
-					+ page.getTitle() + "\' not \'" + cpe.getLPageTitle()
-					+ "\'");
-			throw new IllegalStateException("Not Gateway LoginPage as expected");
+			loger.error("The current page is titled " + "\'" + page.getTitle()
+					+ "\' not expcted \'" + cpe.getLPageTitle() + "\'");
+			throw new IllegalStateException(
+					"Fail to open LoginPage as expected");
 		}
 	}
 
@@ -56,10 +59,10 @@ public class LoginPage {
 		cpe = homePage.getCPE();
 		page = homePage.getPage();
 		if (!cpe.getLPageTitle().equalsIgnoreCase(page.getTitle())) {
-			loger.error("The title of current page is " + "\'"
-					+ page.getTitle() + "\' not \'" + cpe.getLPageTitle()
-					+ "\'");
-			throw new IllegalStateException("Not Gateway LoginPage as expected");
+			loger.error("The current page is titled " + "\'" + page.getTitle()
+					+ "\' not expcted \'" + cpe.getLPageTitle() + "\'");
+			throw new IllegalStateException(
+					"Fail to open LoginPage as expected");
 		}
 	}
 
@@ -72,42 +75,60 @@ public class LoginPage {
 	}
 
 	public void typeUserName(String usrName) {
-		By input_usrName = By.id(ID_USERNAME_INPUT);
-		WebElement input_ele = page.findElement(input_usrName);
+		WebElement input_ele = page.findElement(BY_USRNM_INPUT);
 		input_ele.clear();
 		input_ele.sendKeys(usrName);
 	}
 
 	public void typePasswd(String passwd) {
-		By input_passwd = By.id(ID_PASSWORD_INPUT);
-		WebElement input_ele = page.findElement(input_passwd);
+		WebElement input_ele = page.findElement(BY_PASSWD_INPUT);
 		input_ele.clear();
 		input_ele.sendKeys(passwd);
 	}
 
 	protected void signIn() {
-		By btn_sign_in = By.id(ID_SIGN_ME_IN);
-		page.findElement(btn_sign_in).click();
+		page.findElement(BY_SIGN_ME_IN).click();
 	}
 
-	public boolean login(String usrName, String passwd)
-			throws InterruptedException {
+	public boolean login(String usrName, String passwd) {
 		typeUserName(usrName);
 		typePasswd(passwd);
 		signIn();
-		if (page.getPageSource().contains("Verifying")) {
-			Thread.sleep(3000);
-		}
+		try {
+			WebDriverWait waiter = new WebDriverWait(page, Long.parseLong(cpe
+					.readProp("GUI.timer.explicitlyWait")));
+			boolean verified = waiter.until(ExpectedConditions.invisibilityOfElementWithText(BY_SIGN_ME_IN, "Verifying"));
+			
+			/*boolean verified = waiter.until(new ExpectedCondition<Boolean>() {
+				public Boolean apply(WebDriver page) {
+					if (page.getPageSource().contains("Verifying")) {
+						return false;
+					}
+					return true;
+				}
+			});*/
 
-		String title = page.getTitle();
-		if (LOGINPAGE_TITLE.equalsIgnoreCase(title)) {
-			return false;
+			if (verified) {
+				String title = page.getTitle();
+				if (cpe.getLPageTitle().equalsIgnoreCase(title)) {
+					return false;
+				}
+				if (cpe.getHPageTitle().equalsIgnoreCase(title)) {
+					return true;
+				} else {
+					throw new IllegalStateException(EX_MSG_LOGIN_FAIL);
+				}
+			}
+		} catch (TimeoutException toe) {
+			loger.error("Fail to go verifing for authenticaion");
 		}
-		if (HomePage.HOMEPAGE_TITLE.equalsIgnoreCase(title)) {
-			return true;
-		} else {
-			throw new IllegalStateException(EX_MSG_LOGIN_FAIL);
-		}
+		return false;
+
+		/*
+		 * if (page.getPageSource().contains("Verifying")) { Thread.sleep(3000);
+		 * }
+		 */
+
 		// use explicit web driver waiter for login checking
 		/*
 		 * WebDriverWait sleep = new WebDriverWait(page, 30); try { boolean
@@ -119,8 +140,7 @@ public class LoginPage {
 	}
 
 	public HomePage cancelLogin() {
-		By btn_cancel = By.linkText("Cancel");
-		page.findElement(btn_cancel).click();
+		page.findElement(BY_CANCEL_LINK).click();
 		return new HomePage(this);
 	}
 

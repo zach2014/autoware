@@ -20,8 +20,6 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import com.tch.gui.page.main.HomePage;
-import com.tch.gui.page.main.LoginPage;
 
 /**
  * @author zengjp
@@ -35,7 +33,7 @@ public class CPE implements SSH, WEB {
 
 	public static final String EMPTY_STR = "";
 	public static final String DEF_HOST_IP = "192.168.1.1";
-															
+
 	public static final String ADMIN_ROLE_NM = "admin";
 	public static final String GUEST_ROLE_NM = "guest";
 	public static final String NG_SW = "openwrt";
@@ -46,7 +44,7 @@ public class CPE implements SSH, WEB {
 	private static final String S_H_CHECKING = "StrictHostKeyChecking";
 	private static final long WAIT_4_CH_CLS = 1000;
 	private static final String CPE_DEF_PROP_FILE = "cpe.properties";
-	private static final String PASSWD_CLI = "cat /proc/rip/0124 | head -c 8";
+	private static final String DEF_CLI_PASSWD = "cat /proc/rip/0124 | head -c 8";
 
 	private String variant;
 	private String host;
@@ -59,20 +57,48 @@ public class CPE implements SSH, WEB {
 	private WebDriver web_Conn = null;
 	private Properties prop = new Properties();
 
-	
-	public static void build() throws IOException{
-		InputStream propInput = CPE.class.getClassLoader().getResourceAsStream(CPE_DEF_PROP_FILE);
-		instance.prop.load(propInput);
-		instance.setup();
-	}
-	
-	public static void build(String propFilePath) throws IOException{
-			FileInputStream propInput = new FileInputStream(propFilePath);
+	/**
+	 * To load required properties from default resource file
+	 * 
+	 * @throws IOException
+	 */
+	public static void build() throws IOException {
+		InputStream propInput = CPE.class.getClassLoader().getResourceAsStream(
+				CPE_DEF_PROP_FILE);
+		try {
 			instance.prop.load(propInput);
 			instance.setup();
+		} catch (IOException io) {
+			loger.error("Faile to load CPE Properties from "
+					+ CPE_DEF_PROP_FILE);
+			throw io;
+		}
 	}
-	
-	public static void reset(){
+
+	/**
+	 * To load required properties from given property file
+	 * 
+	 * @param propFilePath
+	 * @throws IOException
+	 */
+	public static void build(String propFilePath) throws IOException {
+		FileInputStream propInput = new FileInputStream(propFilePath);
+		try {
+			instance.prop.load(propInput);
+			instance.setup();
+		} catch (IOException io) {
+			loger.error("Faile to load CPE Properties from " + propFilePath);
+			loger.info("Try to load properties from " + CPE_DEF_PROP_FILE);
+			build();
+		}
+	}
+
+	/**
+	 * To close all opened remote connections and clean associtated properties,
+	 */
+	public static void reset() {
+		loger.trace("Resetting instance of CPE");
+		;
 		if (instance.ssh_Conn != null && instance.ssh_Conn.isConnected()) {
 			instance.closeSSH();
 			instance.ssh_Conn = null;
@@ -81,9 +107,10 @@ public class CPE implements SSH, WEB {
 		instance.web_Conn = null;
 		instance.prop = new Properties();
 	}
-	
-	private CPE() {}
-	
+
+	private CPE() {
+	}
+
 	public String getHPageTitle() {
 		return page_hm_title;
 	}
@@ -92,6 +119,11 @@ public class CPE implements SSH, WEB {
 		return page_login_title;
 	}
 
+	/**
+	 * To compose URL of login
+	 * 
+	 * @return loginURL
+	 */
 	public String getGivenLoginUrl() {
 		if (page_login_url.isEmpty())
 			return EMPTY_STR;
@@ -99,6 +131,12 @@ public class CPE implements SSH, WEB {
 			return "http://" + this.getHost() + "/" + page_login_url;
 	}
 
+	/**
+	 * To get amount of cards in home page according the current user role
+	 * 
+	 * @param role
+	 * @return modalNum
+	 */
 	public Integer getHpageCards(String role) {
 		if (role.equals(CPE.ADMIN_ROLE_NM))
 			return page_hm_admin_crds;
@@ -122,6 +160,10 @@ public class CPE implements SSH, WEB {
 		return "[CPE-" + this.getVariant() + "]@" + this.getHost();
 	}
 
+	/**
+	 * To open web driver to access CPE, firefox is used by default, if no
+	 * specify in properties. Chrome and IE are supported as well
+	 */
 	public boolean openWEB() {
 		String browser = prop.getProperty("GUI.browser", "firefox");
 		long pageLoadTimer = Long.parseLong(prop.getProperty(
@@ -134,21 +176,38 @@ public class CPE implements SSH, WEB {
 			web_Conn = new InternetExplorerDriver();
 		else
 			web_Conn = new FirefoxDriver();
+		if (null != web_Conn) {
+			web_Conn.manage().timeouts()
+					.pageLoadTimeout(pageLoadTimer, TimeUnit.SECONDS);
+			web_Conn.manage().timeouts()
+					.implicitlyWait(implWaitTime, TimeUnit.SECONDS);
 
-		web_Conn.manage().timeouts()
-				.pageLoadTimeout(pageLoadTimer, TimeUnit.SECONDS);
-		web_Conn.manage().timeouts()
-				.implicitlyWait(implWaitTime, TimeUnit.SECONDS);
-
-		web_Conn.manage().window().maximize();
-		return (null != web_Conn);
+			web_Conn.manage().window().maximize();
+			loger.trace("Web browser is " + browser + ", detailed info: \n"
+					+ web_Conn.toString());
+			return true;
+		} else {
+			loger.fatal("Fail to launch web browser: " + browser);
+			return false;
+		}
 	}
 
+	/**
+	 * To get the web driver for accessing web of CPE
+	 * 
+	 * @return webdriver
+	 */
 	public WebDriver getWebPage() {
 		getWebPage(getHPageURL());
 		return web_Conn;
 	}
 
+	/**
+	 * To get the web driver with the given url
+	 * 
+	 * @param url
+	 * @return webdriver
+	 */
 	public WebDriver getWebPage(String url) {
 		if (web_Conn == null) {
 			openWEB();
@@ -157,6 +216,13 @@ public class CPE implements SSH, WEB {
 		return web_Conn;
 	}
 
+	/**
+	 * To execute given cli command string via ssh connection and return the
+	 * response in stdout
+	 * 
+	 * @param cli_command
+	 * @return stdout
+	 */
 	public String remoteExec(String command_str) throws IOException,
 			JSchException {
 		StringBuffer re = new StringBuffer();
@@ -191,7 +257,7 @@ public class CPE implements SSH, WEB {
 			}
 			is.close();
 		} else {
-			System.out.println("Command exit:" + exit_S);
+			System.out.println("\'" + command_str + "\' exit:" + exit_S);
 		}
 		ssh_Ch.disconnect();
 		return re.toString();
@@ -203,16 +269,49 @@ public class CPE implements SSH, WEB {
 	public void closeSSH() {
 		if (ssh_Conn != null && ssh_Conn.isConnected())
 			ssh_Conn.disconnect();
+			loger.trace("SSH session to CPE is disconnected.");
 	}
-	
-	/** 
+
+	/**
 	 * To close the web connection of CPE, quit the web driver
 	 */
 	public void closeWEB() {
 		if (web_Conn != null) {
 			web_Conn.close();
 			web_Conn.quit();
+			loger.trace("WEB seesion to CPE is quit");
 		}
+	}
+
+	public String getWebUser() {
+		String givenUser = readProp("CPE.web.username");
+		if (null == givenUser)
+			return "admin";
+		return givenUser;
+	}
+
+	public String getWebPasswd() throws IOException, JSchException {
+		String givenPass = readProp("CPE.web.password");
+		if (null == givenPass) {
+			String pass_cli = readProp("CPE.cli.defpasswd");
+			if (null == pass_cli)
+				pass_cli = DEF_CLI_PASSWD;
+			givenPass = remoteExec(pass_cli);
+		}
+		return givenPass;
+	}
+
+	/**
+	 * To compose the url of home page
+	 * 
+	 * @return url
+	 */
+	public String getHPageURL() {
+		String givenUrl = this.readProp("GUI.home.url");
+		if (null == givenUrl) {
+			givenUrl = "http://" + getHost();
+		}
+		return givenUrl;
 	}
 
 	protected boolean openSSH() throws JSchException {
@@ -233,14 +332,16 @@ public class CPE implements SSH, WEB {
 			return true;
 		return false;
 	}
-	
+
 	private void setup() {
-		if(! prop.isEmpty()) {
+		if (!prop.isEmpty()) {
 			loger.info("Being setup CPE's properties accordingly.");
 			variant = prop.getProperty("CPE.platform", EMPTY_STR);
 			host = prop.getProperty("CPE.hostip", DEF_HOST_IP);
-			page_hm_title = prop.getProperty("GUI.home.title", HomePage.HOMEPAGE_TITLE);
-			page_login_title = prop.getProperty("GUI.login.title", LoginPage.LOGINPAGE_TITLE);
+			page_hm_title = prop.getProperty("GUI.home.title",
+					EMPTY_STR);
+			page_login_title = prop.getProperty("GUI.login.title",
+					EMPTY_STR);
 			page_hm_guest_crds = Integer.parseInt(prop.getProperty(
 					"GUI.home.guest.cards", "0"));
 			page_hm_admin_crds = Integer.parseInt(prop.getProperty(
@@ -249,34 +350,8 @@ public class CPE implements SSH, WEB {
 			loger.info("CPE setup completed.");
 		}
 		loger.info(instance.toString());
-		loger.trace("GUI.home.title="+page_hm_title);
-		loger.trace("GUI.login.title="+page_login_title);
-		loger.trace("GUI.login.url="+page_login_url);
+		loger.trace("GUI.home.title=" + page_hm_title);
+		loger.trace("GUI.login.title=" + page_login_title);
+		loger.trace("GUI.login.url=" + page_login_url);
 	}
-
-	public String getWebUser() {
-		String givenUser = readProp("web.username");
-		if (null == givenUser) return "admin";
-		return givenUser;
-	}
-	
-	public String getWebPasswd() throws IOException, JSchException {
-		String givenPass = readProp("web.password");
-		if (null == givenPass){
-			// try to get password from /proc/erip/0124
-			givenPass = remoteExec(PASSWD_CLI);
-		}
-		return givenPass;
-	}
-
-	public String getHPageURL() {
-		String givenUrl = this.readProp("GUI.home.url");
-		if (null == givenUrl) {
-			givenUrl = "http://" + getHost();
-		}
-		return givenUrl;
-	}
-	
-
-
 }

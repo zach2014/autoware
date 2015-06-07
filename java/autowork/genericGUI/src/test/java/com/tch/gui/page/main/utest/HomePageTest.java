@@ -1,8 +1,8 @@
 package com.tch.gui.page.main.utest;
 
-import static org.junit.Assert.*;
-
-import java.util.NoSuchElementException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -49,15 +49,14 @@ public class HomePageTest {
 	@Test
 	public void testEnterModal() {
 		Modal modalP = onTest.enterModal(0);
-		assertTrue(onTest.getPage().getTitle().equalsIgnoreCase(HomePage.HOMEPAGE_TITLE));
+		assertTrue(onTest.getPage().getTitle().equalsIgnoreCase(gw.getHPageTitle()));
 		onTest = modalP.fadeoutModal();
-		assertTrue(onTest.getPage().getTitle().equalsIgnoreCase(HomePage.HOMEPAGE_TITLE));
+		assertTrue(onTest.getPage().getTitle().equalsIgnoreCase(gw.getHPageTitle()));
 	}
 	
 	@Test
 	public void testEnterModalException(){
-		ex_rule.expect(NoSuchElementException.class);
-		onTest.enterModal(100);
+		assertNull(onTest.enterModal(100));
 	}
 
 	@Test

@@ -1,6 +1,9 @@
 package com.tch.gui.page.modal.utest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,7 +13,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import com.tch.common.CPE;
@@ -53,14 +55,14 @@ public class GatewayModalTest {
 	@Test
 	public void testCloseCfgPage() {
 		HomePage hm = onTest.closeCfgPage();
-		List<WebElement> cards = hm.getPage().findElements(By.className(HomePage.CLS_SMALLCARD));
+		List<WebElement> cards = hm.getPage().findElements(HomePage.BY_CLS_SCARD);
 		assertFalse(cards.isEmpty());
 	}
 
 	@Test
 	public void testFadeoutModal() {
 		HomePage hm = onTest.fadeoutModal();
-		List<WebElement> cards = hm.getPage().findElements(By.className(HomePage.CLS_SMALLCARD));
+		List<WebElement> cards = hm.getPage().findElements(HomePage.BY_CLS_SCARD);
 		assertFalse(cards.isEmpty());
 	}
 	
@@ -93,12 +95,30 @@ public class GatewayModalTest {
 	
 	@Test
 	public void testUpgradeFW(){
-		String newBuild = "/Users/zach15/Downloads/New-open-VANT-4.rbi";
+		String newBuild = "/Users/zach15/Downloads/signed-VANT-4.rbi";
 		String fwVer = onTest.getFWVersion();
-		onTest.upgradeFW(newBuild);
+		onTest = new GatewayModal(onTest.upgradeFW(newBuild).getCPE());
 		String newVer = onTest.getFWVersion();
 		assertNotEquals(fwVer, newVer);
 	}
+	@Test
+	public void testUpgradeInvalidFW(){
+		String invalidBuild = "/Users/zach15/Downloads/New-open-VANT-4.rbi";
+		String fwVer = onTest.getFWVersion();
+		onTest = new GatewayModal(onTest.upgradeFW(invalidBuild).getCPE());
+		String newVer = onTest.getFWVersion();
+		assertEquals(fwVer, newVer);
+	}
+	
+	@Test
+	public void testUpTime() {
+		Long cur = onTest.getUpTime();
+		onTest.fadeoutModal();
+		onTest = new GatewayModal(onTest.getCPE());
+		Long later= onTest.getUpTime();
+		assertTrue(cur.compareTo(later) < 0);
+	}
+	
 	
 
 }
