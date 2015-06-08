@@ -26,21 +26,21 @@ import com.tch.gui.page.main.LoginPage;
  *
  */
 public class LoginPageTest {
-	private static CPE gw; 
+	private static CPE gw;
 	private LoginPage onTest;
-	
+
 	@Rule
 	public ExpectedException ex = ExpectedException.none();
 
 	@BeforeClass
-	public static  void setupBeforeClass() throws Exception {
+	public static void setupBeforeClass() throws Exception {
 		CPE.build();
 		gw = CPE.instance;
 	}
-	
+
 	@Before
 	public void setUp() throws Exception {
-		onTest =  new LoginPage(gw);
+		onTest = new LoginPage(gw);
 	}
 
 	/**
@@ -51,10 +51,11 @@ public class LoginPageTest {
 		HomePage.logout(onTest.getPage());
 		onTest = null;
 	}
-	
+
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 		gw.closeWEB();
+		gw.closeSSH();
 	}
 
 	@Test
@@ -66,11 +67,12 @@ public class LoginPageTest {
 	}
 
 	@Test
-	public void testLogin() throws InterruptedException, IOException, JSchException {
+	public void testLogin() throws InterruptedException, IOException,
+			JSchException {
 		assertTrue(onTest.login(gw.getWebUser(), gw.getWebPasswd()));
-		//assertTrue(onTest.login("admin", "SN9MM6PF"));
+		// assertTrue(onTest.login("admin", "SN9MM6PF"));
 	}
-	
+
 	@Test
 	public void testLoginFail() throws InterruptedException {
 		assertFalse(onTest.login("admin", "invalid_passwd"));

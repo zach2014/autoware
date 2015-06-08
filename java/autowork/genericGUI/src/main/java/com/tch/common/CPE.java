@@ -2,6 +2,7 @@ package com.tch.common;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -82,11 +83,11 @@ public class CPE implements SSH, WEB {
 	 * @throws IOException
 	 */
 	public static void build(String propFilePath) throws IOException {
-		FileInputStream propInput = new FileInputStream(propFilePath);
 		try {
+			FileInputStream propInput = new FileInputStream(propFilePath);
 			instance.prop.load(propInput);
 			instance.setup();
-		} catch (IOException io) {
+		} catch (FileNotFoundException io) {
 			loger.error("Faile to load CPE Properties from " + propFilePath);
 			loger.info("Try to load properties from " + CPE_DEF_PROP_FILE);
 			build();
@@ -269,7 +270,7 @@ public class CPE implements SSH, WEB {
 	public void closeSSH() {
 		if (ssh_Conn != null && ssh_Conn.isConnected())
 			ssh_Conn.disconnect();
-			loger.trace("SSH session to CPE is disconnected.");
+		loger.trace("SSH session to CPE is disconnected.");
 	}
 
 	/**
@@ -284,14 +285,14 @@ public class CPE implements SSH, WEB {
 	}
 
 	public String getWebUser() {
-		String givenUser = readProp("CPE.web.username");
+		String givenUser = readProp("web.username");
 		if (null == givenUser)
 			return "admin";
 		return givenUser;
 	}
 
 	public String getWebPasswd() throws IOException, JSchException {
-		String givenPass = readProp("CPE.web.password");
+		String givenPass = readProp("web.password");
 		if (null == givenPass) {
 			String pass_cli = readProp("CPE.cli.defpasswd");
 			if (null == pass_cli)
@@ -318,13 +319,17 @@ public class CPE implements SSH, WEB {
 		if (this.ssh_Conn == null) {
 			JSch.setConfig(S_H_CHECKING, "no");
 			JSch jsch = new JSch();
-			ssh_Conn = jsch.getSession(prop.getProperty("ssh.username"),
-					this.getHost());
-			// ssh_Conn.setPassword(prop.getProperty("ssh.password"));
-			if (prop.getProperty("CPE.ssh.id").isEmpty()) {
+			String ssh_userName = readProp("ssh.username");
+			String ssh_passwd = readProp("ssh.passwor");
+			String ssh_key_file = readProp("CPE.ssh.id");
+			ssh_Conn = jsch.getSession(ssh_userName, this.getHost());
+			ssh_Conn.setPassword(ssh_passwd);
+			if (ssh_key_file.isEmpty()) {
+				loger.debug("To open SSH session with username/password: " + ssh_userName+ "/" + ssh_passwd);
 				ssh_Conn.connect();
 			} else {
-				jsch.addIdentity(prop.getProperty("CPE.ssh.id"));
+				jsch.addIdentity(ssh_key_file);
+				loger.debug("To open SSH with identity key: " + ssh_key_file);
 				ssh_Conn.connect();
 			}
 		}
@@ -338,10 +343,8 @@ public class CPE implements SSH, WEB {
 			loger.info("Being setup CPE's properties accordingly.");
 			variant = prop.getProperty("CPE.platform", EMPTY_STR);
 			host = prop.getProperty("CPE.hostip", DEF_HOST_IP);
-			page_hm_title = prop.getProperty("GUI.home.title",
-					EMPTY_STR);
-			page_login_title = prop.getProperty("GUI.login.title",
-					EMPTY_STR);
+			page_hm_title = prop.getProperty("GUI.home.title", EMPTY_STR);
+			page_login_title = prop.getProperty("GUI.login.title", EMPTY_STR);
 			page_hm_guest_crds = Integer.parseInt(prop.getProperty(
 					"GUI.home.guest.cards", "0"));
 			page_hm_admin_crds = Integer.parseInt(prop.getProperty(

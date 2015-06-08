@@ -23,13 +23,13 @@ import com.tch.gui.page.main.HomePage;
  */
 public class Modal extends HomePage {
 
-	public static final String ID_CLOSE_CONFIG = "close-config";
-	public static final String ID_SAVE_CONFIG = "save-config";
-	public static final String ID_CANCEL_CONFIG = "cancel-config";
-	public static final String CLS_ICON_REFRESH = "icon-refresh";
-	public static final String CLS_ICON_PLUS = "icon-plus-sign";
-	public static final String CLS_ICON_MINUS = "icon-minus-sign";
-	public static final String CLS_ICON_REMOVE = "icon-remove";
+	public static final By BY_BTN_CLOSE = By.id("close-config");
+	public static final By BY_BTN_SAVE = By.id("save-config");
+	public static final By BY_BTN_CANCEL = By.id("cancel-config");
+	public static final By BY_ICON_REFRESH = By.className("icon-refresh");
+	public static final By BY_ICON_PLUS = By.className("icon-plus-sign");
+	public static final By BY_ICON_MINUS = By.className("icon-minus-sign");
+	public static final By BY_ICON_REMOVE = By.className("icon-remove");
 	public static final By BY_CLS_MDAL_BDY = By.className("modal-body");
 
 	static final Logger loger = LogManager.getLogger(Modal.class.getName());
@@ -38,15 +38,13 @@ public class Modal extends HomePage {
 	public Modal(CPE cpe, Integer id) {
 		super(cpe);
 		List<WebElement> cards = waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(HomePage.BY_CLS_SCARD));
-		//page.findElements(By.className(HomePage.CLS_SMALLCARD)).get(id).click();
 		cards.get(id).click();
 		By card_modal = By.className("modal");
 		try {
-			//WebDriverWait wait = new WebDriverWait(page, Long.parseLong(cpe.readProp("GUI.timer.explicitlyWait")));
 			waiter.until(ExpectedConditions.presenceOfElementLocated(card_modal));
 		} catch (TimeoutException toe) {
-			loger.error(toe.getMessage());
-			throw new IllegalStateException("Enter modal config card with exception");
+			loger.error("The modal configurable card does not fade in as expected" );
+			throw new IllegalStateException("Fail to enter modal of indexed " + id);
 		}
 	}
 
@@ -59,36 +57,31 @@ public class Modal extends HomePage {
 	
 	public void showAdvanced() throws NoSuchElementException,
 			ElementNotVisibleException {
-		By by_plus_icon = By.className(CLS_ICON_PLUS);
-		WebElement icon_plus = page.findElement(by_plus_icon);
+		WebElement icon_plus = page.findElement(BY_ICON_PLUS);
 		icon_plus.click();
 	}
 
 	public void hideAdvanced() throws NoSuchElementException,
 			ElementNotVisibleException {
-		By by_icon_minus = By.className(CLS_ICON_MINUS);
-		WebElement icon_minus = page.findElement(by_icon_minus);
+		WebElement icon_minus = page.findElement(BY_ICON_MINUS);
 		icon_minus.click();
 	}
 
 	public void refreshData() throws NoSuchElementException {
-		By by_refresh_icon = By.className(CLS_ICON_REFRESH);
-		WebElement icon_refresh = page.findElement(by_refresh_icon);
+		WebElement icon_refresh = page.findElement(BY_ICON_REFRESH);
 		icon_refresh.click();
 	}
 
 	public HomePage closeCfgPage() throws NoSuchElementException,
 			ElementNotVisibleException {
-		By by_btn_close = By.id(ID_CLOSE_CONFIG);
-		WebElement btn_close = page.findElement(by_btn_close);
+		WebElement btn_close = page.findElement(BY_BTN_CLOSE);
 		btn_close.click();
 		return new HomePage(this);
 	}
 
 	public boolean saveChanges() throws NoSuchElementException,
 			ElementNotVisibleException {
-		By by_btn_save = By.id(ID_SAVE_CONFIG);
-		WebElement btn_save = page.findElement(by_btn_save);
+		WebElement btn_save = page.findElement(BY_BTN_SAVE);
 		btn_save.click();
 		waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(HomePage.BY_CLS_SCARD));
 		return true;
@@ -96,15 +89,13 @@ public class Modal extends HomePage {
 
 	public HomePage cancelChanges() throws NoSuchElementException,
 			ElementNotVisibleException {
-		By by_btn_cancel = By.id(ID_CANCEL_CONFIG);
-		WebElement btn_cancel = page.findElement(by_btn_cancel);
+		WebElement btn_cancel = page.findElement(BY_BTN_CANCEL);
 		btn_cancel.click();
 		return new HomePage(this);
 	}
 
 	public HomePage fadeoutModal() throws NoSuchElementException {
-		By by_icon_remove = By.className(CLS_ICON_REMOVE);
-		WebElement icon_remove = page.findElement(by_icon_remove);
+		WebElement icon_remove = page.findElement(BY_ICON_REMOVE);
 		icon_remove.click();
 		return new HomePage(this);
 	}

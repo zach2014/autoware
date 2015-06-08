@@ -67,7 +67,7 @@ public class HomePageTest {
 
 	@Test
 	public void testGoLoginURL() throws Exception {
-		CPE.build("/Users/zach15/repos/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe.properties");
+		CPE.build("/Users/zach15/repos/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe4utest.properties");
 		LoginPage loginP = onTest.goLogin();
 		assertTrue(loginP.getPage().getTitle().equalsIgnoreCase("Login"));
 	}

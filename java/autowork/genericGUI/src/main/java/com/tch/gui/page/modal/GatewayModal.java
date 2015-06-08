@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -18,7 +17,7 @@ import com.tch.gui.page.main.HomePage;
 
 public class GatewayModal extends Modal {
 
-	public static final String ID_GW_MODAL = "gateway-modal";
+	public static final By BY_GW_MODAL = By.id("gateway-modal");
 	public static final Integer INDEX_GW_MODAL = 0;
 	public static final By BY_BTN_SYS_RESET = By.id("btn-system-reset");
 	public static final By BY_RESET_MSG = By.id("resetting-msg");
@@ -28,7 +27,6 @@ public class GatewayModal extends Modal {
 	private static final By BY_CTL_DESC = By.className("simple-desc");
 	private static final By BY_FW_UPGRADER = By.id("file-upgradefw");
 	private static final By BY_BTN_FW_UPGRADE = By.id("btn-upgrade");
-	// private static final By BY_CLS_ERROR = By.className("alert-error");
 	private static final By BY_TRSF_MSG = By.id("upgrade-transfer-msg");
 	private static final By BY_BSY_MSG = By.id("upgrade-busy-msg");
 	private static final By BY_NO_FILE_ERR = By.id("upgrade-nofile-msg");
@@ -39,13 +37,13 @@ public class GatewayModal extends Modal {
 
 	public GatewayModal(CPE cpe) {
 		super(cpe, 0);
-		By by_gw_modal = By.id(ID_GW_MODAL);
 		try {
-			this.page.findElement(by_gw_modal);
-		} catch (NoSuchElementException e) {
-			e.printStackTrace();
+			waiter.until(ExpectedConditions
+					.visibilityOfElementLocated(BY_GW_MODAL));
+		} catch (TimeoutException toe) {
+			loger.error("Gateway modal body is not visible as expected");
 			throw new IllegalStateException(
-					"This is not config card page of Gateway!");
+					"Fail to load configurable card of Gateway modal");
 		}
 	}
 
@@ -103,18 +101,6 @@ public class GatewayModal extends Modal {
 			}
 		}
 		return upTime;
-	}
-
-	private Long textToSecs(String text) {
-		// the format like 1h 20min 20sec
-		String[] items = (text.replaceAll("sec", "")).split("\\D+ ");
-		Integer times = items.length - 1;
-		Long sec = 0L;
-		for (String i : items) {
-			sec = (long) (sec + Long.parseLong(i) * Math.pow(60L, times));
-			times--;
-		}
-		return sec;
 	}
 
 	/**
@@ -206,6 +192,29 @@ public class GatewayModal extends Modal {
 		}
 	}
 
+	/**
+	 * To parse the uptime from text to seconds in Long
+	 * 
+	 * @param text
+	 * @return
+	 */
+	private Long textToSecs(String text) {
+		// the format like 1hours 20min 20sec
+		String[] items = (text.replaceAll("sec", "")).split("\\D+ ");
+		Integer times = items.length - 1;
+		Long sec = 0L;
+		for (String i : items) {
+			sec = (long) (sec + Long.parseLong(i) * Math.pow(60L, times));
+			times--;
+		}
+		return sec;
+	}
+
+	/**
+	 * To polling the system startup until home page is refreshed
+	 * 
+	 * @param page
+	 */
 	private void rebootup(WebDriver page) {
 		String bootingWait = cpe.readProp("CPE.timer.reboot");
 		loger.info("CPE is rebooting up for " + bootingWait + " seconds");
@@ -225,5 +234,4 @@ public class GatewayModal extends Modal {
 			}
 		});
 	}
-
 }

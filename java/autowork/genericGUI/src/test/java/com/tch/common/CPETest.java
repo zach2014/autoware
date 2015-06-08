@@ -1,7 +1,6 @@
 package com.tch.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 
@@ -18,7 +17,7 @@ public class CPETest {
 
 	@Before
 	public void setUp() throws Exception {
-		CPE.build("/Users/zach15/repos/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe.properties");
+		CPE.build("/Users/zach15/repos/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe4utest.properties");
 		gw = CPE.instance;
 	}
 
@@ -49,8 +48,10 @@ public class CPETest {
 	}
 	
 	@Test
-	public void testOpenSSH() throws JSchException {
+	public void testOpenSSH() throws JSchException, IOException {
 		assertTrue(gw.openSSH());
+		String pass = gw.getWebPasswd();
+		assertFalse(pass.isEmpty());
 	}
 
 	@Test
