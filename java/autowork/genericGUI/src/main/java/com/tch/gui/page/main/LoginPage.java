@@ -47,7 +47,7 @@ public class LoginPage {
 							.elementToBeClickable(HomePage.BY_BTN_SIGNIN))
 					.click();
 			if (waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
-				loger.debug("Navgate to login page successfully");
+				loger.debug("Navigate to login page successfully");
 			}
 		} catch (TimeoutException toe) {
 			loger.error("The title of current page is " + page.getTitle()

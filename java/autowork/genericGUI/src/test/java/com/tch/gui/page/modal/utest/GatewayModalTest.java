@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -23,12 +24,14 @@ import com.tch.gui.page.modal.Modal;
 public class GatewayModalTest {
 	private static final int ID_TETST_CARD = 0;
 	static CPE gw;
+	static Properties ddt = new Properties();
 	public GatewayModal onTest = null;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws IOException {
 		CPE.build();
 		gw = CPE.instance;
+		ddt.load(GatewayModalTest.class.getClassLoader().getResourceAsStream("ddt.properties"));
 	}
 	
 	@Before
@@ -95,7 +98,9 @@ public class GatewayModalTest {
 	
 	@Test
 	public void testUpgradeFW(){
-		String newBuild = "/Users/zach15/Downloads/signed-VANT-4.rbi";
+		String oldBuild = ddt.getProperty("build.valid.old");
+		String newBuild = ddt.getProperty("build.valid.new");
+		onTest = new GatewayModal(onTest.upgradeFW(oldBuild).getCPE());
 		String fwVer = onTest.getFWVersion();
 		onTest = new GatewayModal(onTest.upgradeFW(newBuild).getCPE());
 		String newVer = onTest.getFWVersion();
@@ -103,7 +108,7 @@ public class GatewayModalTest {
 	}
 	@Test
 	public void testUpgradeInvalidFW(){
-		String invalidBuild = "/Users/zach15/Downloads/New-open-VANT-4.rbi";
+		String invalidBuild = ddt.getProperty("build.invalid");
 		String fwVer = onTest.getFWVersion();
 		onTest = new GatewayModal(onTest.upgradeFW(invalidBuild).getCPE());
 		String newVer = onTest.getFWVersion();

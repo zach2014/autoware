@@ -4,15 +4,14 @@
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
 		</Console>
-		<File name="All-Info" filename="/Users/zach15/log/cpe1.test">
+		<File name="All-Info" filename="/home/zengjp/log/test.log">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
 		</File>
 	</Appenders>
 	<Loggers>
-		<Root level="debug">
-			<AppenderRef ref="Console" level="Info" />
-			<AppenderRef ref="All-Info" level="Trace" />
+		<Root level="Debug">
+			<AppenderRef ref="Console" level="Error" />
+			<AppenderRef ref="All-Info" level="Debug"/>
 		</Root>
-
 	</Loggers>
 </Configuration>
