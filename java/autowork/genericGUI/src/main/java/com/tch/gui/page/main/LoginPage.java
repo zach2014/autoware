@@ -31,12 +31,25 @@ public class LoginPage {
 
 	private final CPE cpe;
 	private WebDriver page;
+	/**
+	 * To wait explicitly
+	 */
+	protected final WebDriverWait waiter;
 
 	public LoginPage(CPE gw) {
 		cpe = gw;
 		page = gw.getWebPage();
-		page.findElement(HomePage.BY_BTN_SIGNIN).click();
-		if (!cpe.getLPageTitle().equalsIgnoreCase(page.getTitle())) {
+		waiter = new WebDriverWait(page, Long.parseLong(cpe
+				.readProp("GUI.timer.explicitlyWait")));
+		try {
+			waiter.until(
+					ExpectedConditions
+							.elementToBeClickable(HomePage.BY_BTN_SIGNIN))
+					.click();
+			if (waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
+				loger.debug("Navgate to login page successfully");
+			}
+		} catch (TimeoutException toe) {
 			loger.error("The title of current page is " + page.getTitle()
 					+ " not " + cpe.getLPageTitle());
 			throw new IllegalStateException(
@@ -47,9 +60,19 @@ public class LoginPage {
 	public LoginPage(CPE gw, String url) {
 		cpe = gw;
 		page = gw.getWebPage(url);
-		if (!cpe.getLPageTitle().equalsIgnoreCase(page.getTitle())) {
-			loger.error("The current page is titled " + "\'" + page.getTitle()
-					+ "\' not expcted \'" + cpe.getLPageTitle() + "\'");
+		waiter = new WebDriverWait(page, Long.parseLong(cpe
+				.readProp("GUI.timer.explicitlyWait")));
+		try {
+			waiter.until(
+					ExpectedConditions
+							.elementToBeClickable(HomePage.BY_BTN_SIGNIN))
+					.click();
+			if (waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
+				loger.debug("Navgate to login page successfully");
+			}
+		} catch (TimeoutException toe) {
+			loger.error("The title of current page is " + page.getTitle()
+					+ " not " + cpe.getLPageTitle());
 			throw new IllegalStateException(
 					"Fail to open LoginPage as expected");
 		}
@@ -58,9 +81,18 @@ public class LoginPage {
 	public LoginPage(HomePage homePage) {
 		cpe = homePage.getCPE();
 		page = homePage.getPage();
-		if (!cpe.getLPageTitle().equalsIgnoreCase(page.getTitle())) {
-			loger.error("The current page is titled " + "\'" + page.getTitle()
-					+ "\' not expcted \'" + cpe.getLPageTitle() + "\'");
+		waiter = homePage.waiter;
+		try {
+			waiter.until(
+					ExpectedConditions
+							.elementToBeClickable(HomePage.BY_BTN_SIGNIN))
+					.click();
+			if (waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
+				loger.debug("Navgate to login page successfully");
+			}
+		} catch (TimeoutException toe) {
+			loger.error("The title of current page is " + page.getTitle()
+					+ " not " + cpe.getLPageTitle());
 			throw new IllegalStateException(
 					"Fail to open LoginPage as expected");
 		}
@@ -97,16 +129,15 @@ public class LoginPage {
 		try {
 			WebDriverWait waiter = new WebDriverWait(page, Long.parseLong(cpe
 					.readProp("GUI.timer.explicitlyWait")));
-			boolean verified = waiter.until(ExpectedConditions.invisibilityOfElementWithText(BY_SIGN_ME_IN, "Verifying"));
-			
-			/*boolean verified = waiter.until(new ExpectedCondition<Boolean>() {
-				public Boolean apply(WebDriver page) {
-					if (page.getPageSource().contains("Verifying")) {
-						return false;
-					}
-					return true;
-				}
-			});*/
+			boolean verified = waiter.until(ExpectedConditions
+					.invisibilityOfElementWithText(BY_SIGN_ME_IN, "Verifying"));
+
+			/*
+			 * boolean verified = waiter.until(new ExpectedCondition<Boolean>()
+			 * { public Boolean apply(WebDriver page) { if
+			 * (page.getPageSource().contains("Verifying")) { return false; }
+			 * return true; } });
+			 */
 
 			if (verified) {
 				String title = page.getTitle();
