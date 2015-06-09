@@ -3,6 +3,7 @@ package com.tch.common;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
@@ -12,12 +13,13 @@ import org.openqa.selenium.WebDriver;
 import com.jcraft.jsch.JSchException;
 
 public class CPETest {
-
+	static Properties ddt = new Properties();
 	private CPE gw;
 
 	@Before
 	public void setUp() throws Exception {
-		CPE.build("/Users/zach15/repos/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe4utest.properties");
+		ddt.load(CPETest.class.getClassLoader().getResourceAsStream("ddt.properties"));
+		CPE.build(ddt.getProperty("utest.spec.prop"));
 		gw = CPE.instance;
 	}
 
@@ -59,6 +61,6 @@ public class CPETest {
 		String uci_show = "uci show ";
 		String wan_ifname = "network.wan.ifname";
 		String re = gw.remoteExec(uci_show + wan_ifname);
-		assertEquals(wan_ifname+"=\'eth4\'", re);
+		assertEquals(wan_ifname+ "=\'" + gw.readProp("CPE.network.wan.if") + "\'", re);
 	}	
 }

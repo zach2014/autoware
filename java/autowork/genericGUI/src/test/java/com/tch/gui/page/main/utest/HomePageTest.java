@@ -4,6 +4,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Properties;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -19,6 +21,7 @@ import com.tch.gui.page.modal.Modal;
 
 public class HomePageTest {
 	private static CPE gw;
+	static Properties ddt = new Properties();
 	private HomePage onTest;
 
 	@Rule
@@ -27,6 +30,7 @@ public class HomePageTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		CPE.build();
+		ddt.load(HomePageTest.class.getClassLoader().getResourceAsStream("ddt.properties"));
 	}
 
 	@Before
@@ -67,14 +71,14 @@ public class HomePageTest {
 
 	@Test
 	public void testGoLoginURL() throws Exception {
-		CPE.build("/Users/zach15/repos/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe4utest.properties");
+		CPE.build(ddt.getProperty("utest.spec.prop"));
 		LoginPage loginP = onTest.goLogin();
 		assertTrue(loginP.getPage().getTitle().equalsIgnoreCase("Login"));
 	}
 
 	@Test
 	public void testGoInvalidLoginURL() throws Exception {
-		CPE.build("/Users/zach15/repos/github/autoware/java/autowork/genericGUI/src/test/resources/demo/cpe_ex.properties");
+		CPE.build(ddt.getProperty("utest.ex.prop"));
 		ex_rule.expect(IllegalStateException.class);
 		LoginPage loginP = onTest.goLogin();
 		assertTrue(loginP.getPage().getTitle()

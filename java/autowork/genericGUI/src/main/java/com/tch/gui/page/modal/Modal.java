@@ -51,6 +51,7 @@ public class Modal extends HomePage {
 	/**
 	 * To enter another Modal page from one Modal page, back home page firstly.
 	 */
+	@Override
 	public Modal enterModal(int id_card){
 		return fadeoutModal().enterModal(id_card);
 	}

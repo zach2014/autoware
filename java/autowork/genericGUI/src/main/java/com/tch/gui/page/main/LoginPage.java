@@ -63,10 +63,6 @@ public class LoginPage {
 		waiter = new WebDriverWait(page, Long.parseLong(cpe
 				.readProp("GUI.timer.explicitlyWait")));
 		try {
-			waiter.until(
-					ExpectedConditions
-							.elementToBeClickable(HomePage.BY_BTN_SIGNIN))
-					.click();
 			if (waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
 				loger.debug("Navgate to login page successfully");
 			}

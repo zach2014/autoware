@@ -70,7 +70,6 @@ public class LoginPageTest {
 	public void testLogin() throws InterruptedException, IOException,
 			JSchException {
 		assertTrue(onTest.login(gw.getWebUser(), gw.getWebPasswd()));
-		// assertTrue(onTest.login("admin", "SN9MM6PF"));
 	}
 
 	@Test
