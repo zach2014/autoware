@@ -98,7 +98,7 @@ public class CPE implements SSH, WEB {
 	 * To close all opened remote connections and clean associtated properties,
 	 */
 	public static void reset() {
-		loger.trace("Resetting instance of CPE");
+		loger.debug("Resetting instance of CPE");
 		;
 		if (instance.ssh_Conn != null && instance.ssh_Conn.isConnected()) {
 			instance.closeSSH();
@@ -184,7 +184,7 @@ public class CPE implements SSH, WEB {
 					.implicitlyWait(implWaitTime, TimeUnit.SECONDS);
 
 			web_Conn.manage().window().maximize();
-			loger.trace("Web browser is " + browser + ", detailed info: \n"
+			loger.debug("Web browser is " + browser + ", detailed info: \n"
 					+ web_Conn.toString());
 			return true;
 		} else {
@@ -247,7 +247,8 @@ public class CPE implements SSH, WEB {
 			try {
 				Thread.sleep(WAIT_4_CH_CLS);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				loger.error("Interrupt the wait for openning SSH channel");
+				loger.debug(e.getMessage());
 			}
 		Integer exit_S = ssh_Ch.getExitStatus();
 		if (0 == exit_S) { // retrieve output of cmd
@@ -270,7 +271,7 @@ public class CPE implements SSH, WEB {
 	public void closeSSH() {
 		if (ssh_Conn != null && ssh_Conn.isConnected())
 			ssh_Conn.disconnect();
-		loger.trace("SSH session to CPE is disconnected.");
+		loger.debug("SSH session to CPE is disconnected.");
 	}
 
 	/**
@@ -279,8 +280,8 @@ public class CPE implements SSH, WEB {
 	public void closeWEB() {
 		if (web_Conn != null) {
 			web_Conn.close();
-			web_Conn.quit();
-			loger.trace("WEB seesion to CPE is quit");
+			//web_Conn.quit();
+			loger.debug("WEB seesion to CPE is quit");
 		}
 	}
 
@@ -353,8 +354,8 @@ public class CPE implements SSH, WEB {
 			loger.info("CPE setup completed.");
 		}
 		loger.info(instance.toString());
-		loger.trace("GUI.home.title=" + page_hm_title);
-		loger.trace("GUI.login.title=" + page_login_title);
-		loger.trace("GUI.login.url=" + page_login_url);
+		loger.debug("GUI.home.title=" + page_hm_title);
+		loger.debug("GUI.login.title=" + page_login_title);
+		loger.debug("GUI.login.url=" + page_login_url);
 	}
 }

@@ -83,11 +83,11 @@ public class HomePage {
 				login1StPage.login(cpe.getWebUser(), cpe.getWebPasswd());
 				page = login1StPage.getPage();
 			} catch (IOException e) {
-				loger.error("Read CPE properties file with error");
-				e.printStackTrace();
+				loger.error("Read CPE properties file with exception: " + e.toString());
+				loger.debug(e.getMessage());
 			} catch (JSchException e) {
-				loger.error("Remote SSH connection with error");
-				e.printStackTrace();
+				loger.error("Setup remote SSH connection with exception: " + e.toString());
+				loger.debug(e.getMessage());
 			}
 		}
 	}
@@ -109,7 +109,7 @@ public class HomePage {
 						.findElements(BY_CLS_SCARD).size()) {
 					loger.warn("Home page loading do NOT complete");
 				}
-				loger.trace("Home page has been loaded completely");
+				loger.debug("Home page has been loaded completely");
 			}
 		} catch (TimeoutException toe) {
 			loger.error("The current page is titled \'" + page.getTitle()
@@ -136,7 +136,7 @@ public class HomePage {
 						.findElements(BY_CLS_SCARD).size()) {
 					loger.warn("Home page loading do NOT complete");
 				}
-				loger.trace("Home page has been loaded completely");
+				loger.debug("Home page has been loaded completely");
 			}
 		} catch (TimeoutException toe) {
 			loger.error("Fail to open home page for titled " + page.getTitle()
@@ -161,7 +161,7 @@ public class HomePage {
 						.findElements(BY_CLS_SCARD).size()) {
 					loger.warn("Home page loading do NOT complete");
 				}
-				loger.trace("Home page has been loaded completely");
+				loger.debug("Home page has been loaded completely");
 			}
 		} catch (TimeoutException toe) {
 			loger.error("Fail to open home page for titled " + page.getTitle()

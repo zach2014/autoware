@@ -51,7 +51,7 @@ public class HomePageTest {
 	}
 
 	@Test
-	public void testEnterModal() {
+	public void should_fadeIn_modal_config_card() {
 		Modal modalP = onTest.enterModal(0);
 		assertTrue(onTest.getPage().getTitle().equalsIgnoreCase(gw.getHPageTitle()));
 		onTest = modalP.fadeoutModal();
@@ -59,25 +59,25 @@ public class HomePageTest {
 	}
 	
 	@Test
-	public void testEnterModalException(){
+	public void should_do_nothing_4_invalid_card_index(){
 		assertNull(onTest.enterModal(100));
 	}
 
 	@Test
-	public void testLogin() {
+	public void should_navigate_2_login_page() {
 		LoginPage loginP = onTest.goLogin();
 		assertTrue(loginP.getPage().getTitle().equalsIgnoreCase("Login"));
 	}
 
 	@Test
-	public void testGoLoginURL() throws Exception {
+	public void should_open_login_page_with_url() throws Exception {
 		CPE.build(ddt.getProperty("utest.spec.prop"));
 		LoginPage loginP = onTest.goLogin();
 		assertTrue(loginP.getPage().getTitle().equalsIgnoreCase("Login"));
 	}
 
 	@Test
-	public void testGoInvalidLoginURL() throws Exception {
+	public void should_not_open_login_page_4_invalid_url() throws Exception {
 		CPE.build(ddt.getProperty("utest.ex.prop"));
 		ex_rule.expect(IllegalStateException.class);
 		LoginPage loginP = onTest.goLogin();
@@ -86,7 +86,7 @@ public class HomePageTest {
 	}
 
 	@Test
-	public void testLogout() throws InterruptedException {
+	public void should_be_back_2_home_page_aftr_logpout() throws InterruptedException {
 		HomePage.logout(onTest.getPage());
 		onTest.goLogin().login("admin", "test");
 		HomePage.logout(onTest.getPage());
@@ -95,7 +95,7 @@ public class HomePageTest {
 	}
 
 	@Test
-	public void testNoLogout(){
+	public void should_no_issue_when_dup_logout(){
 		HomePage.logout(onTest.getPage());
 		HomePage.logout(onTest.getPage());
 		assertFalse(HomePage.isLogged(onTest.getPage()));

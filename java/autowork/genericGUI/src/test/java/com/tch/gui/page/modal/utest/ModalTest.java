@@ -47,7 +47,7 @@ public class ModalTest {
 	}
 
 	@Test
-	public void testShowAdvanced() {
+	public void should_expand_infos_by_showAdvanced_btn() {
 		onTest.showAdvanced();
 		onTest.hideAdvanced();
 		onTest.showAdvanced();
@@ -56,7 +56,7 @@ public class ModalTest {
 	}
 
 	@Test
-	public void testRefreshData() {
+	public void should_refresh_modal_config_card() {
 		onTest.refreshData();
 		HomePage hp = onTest.fadeoutModal();
 		onTest = hp.enterModal(0);
@@ -64,21 +64,21 @@ public class ModalTest {
 	}
 
 	@Test
-	public void testCloseCfgPage() {
+	public void should_be_back_homePage_aftr_close_modal_card() {
 		HomePage home = onTest.closeCfgPage();
 		Modal modalP = home.enterModal(0);
 		modalP.showAdvanced();		
 	}
 
 	@Test
-	public void testSaveChanges() {
+	public void should_save_modification_by_save_btn() {
 		Modal modalP = onTest.enterModal(0);
 		ex.expect(ElementNotVisibleException.class);
 		assertTrue(modalP.saveChanges());
 	}
 
 	@Test
-	public void testCancelChanges() {
+	public void should_cancel_modification_by_cancel_btn() {
 		ex.expect(ElementNotVisibleException.class);
 		HomePage hm = onTest.cancelChanges();
 		hm.enterModal(1);
@@ -86,7 +86,7 @@ public class ModalTest {
 	}
 	
 	@Test
-	public void testFadeoutModal(){
+	public void should_be_back_homePage_aftr_fadeOut_modal_card(){
 		HomePage hm = onTest.fadeoutModal();
 		hm.enterModal(1);
 		assertNotNull(onTest.fadeoutModal());

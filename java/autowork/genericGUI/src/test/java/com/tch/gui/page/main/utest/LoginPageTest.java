@@ -59,7 +59,7 @@ public class LoginPageTest {
 	}
 
 	@Test
-	public void testCancelLogin() {
+	public void should_be_back_homePage_4_cancel_login() {
 		onTest.cancelLogin();
 		String cur_Title = onTest.getPage().getTitle();
 		assertFalse(cur_Title.equals(gw.getLPageTitle()));
@@ -67,13 +67,13 @@ public class LoginPageTest {
 	}
 
 	@Test
-	public void testLogin() throws InterruptedException, IOException,
+	public void should_go_logged_homPage_aftr_login() throws InterruptedException, IOException,
 			JSchException {
 		assertTrue(onTest.login(gw.getWebUser(), gw.getWebPasswd()));
 	}
 
 	@Test
-	public void testLoginFail() throws InterruptedException {
+	public void should_not_logged_with_invalid_auth() throws InterruptedException {
 		assertFalse(onTest.login("admin", "invalid_passwd"));
 	}
 

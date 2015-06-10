@@ -30,7 +30,7 @@ public class CPETest {
 	}
 
 	@Test
-	public void testSingleton() throws IOException{
+	public void should_only_one_inst_global() throws IOException{
 		CPE gw1 = CPE.instance;
 		assertTrue(gw1 == gw);
 		CPE.reset();
@@ -42,7 +42,7 @@ public class CPETest {
 	}
 	
 	@Test
-	public void testOpenWEB() {
+	public void should_open_web_page() {
 		WebDriver browser = gw.getWebPage();
 		String hTitle = browser.getTitle();
 		assertEquals("Gateway", hTitle);
@@ -50,14 +50,14 @@ public class CPETest {
 	}
 	
 	@Test
-	public void testOpenSSH() throws JSchException, IOException {
+	public void should_open_ssh_session() throws JSchException, IOException {
 		assertTrue(gw.openSSH());
 		String pass = gw.getWebPasswd();
 		assertFalse(pass.isEmpty());
 	}
 
 	@Test
-	public void testCMD() throws JSchException, IOException {
+	public void should_exec_cli_remote() throws JSchException, IOException {
 		String uci_show = "uci show ";
 		String wan_ifname = "network.wan.ifname";
 		String re = gw.remoteExec(uci_show + wan_ifname);

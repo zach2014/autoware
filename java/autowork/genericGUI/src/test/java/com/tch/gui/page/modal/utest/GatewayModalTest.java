@@ -1,12 +1,10 @@
 package com.tch.gui.page.modal.utest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Properties;
 
 import org.junit.After;
@@ -14,15 +12,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.openqa.selenium.WebElement;
 
 import com.tch.common.CPE;
 import com.tch.gui.page.main.HomePage;
 import com.tch.gui.page.modal.GatewayModal;
-import com.tch.gui.page.modal.Modal;
 
 public class GatewayModalTest {
-	private static final int ID_TETST_CARD = 0;
+	//private static final int ID_TETST_CARD = 0;
 	static CPE gw;
 	static Properties ddt = new Properties();
 	public GatewayModal onTest = null;
@@ -48,7 +44,7 @@ public class GatewayModalTest {
 	public static void tearDownAfterClass(){
 		gw.closeWEB();
 	}
-	@Test
+/*	@Test
 	public void testShowAdvanced() {
 		onTest.showAdvanced();
 		onTest.hideAdvanced();
@@ -76,10 +72,10 @@ public class GatewayModalTest {
 		newModal.hideAdvanced();
 		HomePage hm = newModal.fadeoutModal();
 		assertEquals("Back home page as expected", gw.getHPageTitle(), hm.getPage().getTitle());
-	}
+	}*/
 	
 	@Test
-	public void testFactoryReset() {
+	public void should_do_factory_reset_by_resetBtn() {
 		CPE tmp = onTest.getCPE();
 		HomePage hm = onTest.FactoryReset();
 		String expectedTitle = tmp.getHPageTitle();
@@ -88,7 +84,7 @@ public class GatewayModalTest {
 	}
 	
 	@Test
-	public void testRestart() {
+	public void shoudl_do_restart_by_restartBtn() {
 		CPE tmp = onTest.getCPE();
 		HomePage hm = onTest.restart();
 		String expectedTitle = tmp.getHPageTitle();
@@ -97,7 +93,7 @@ public class GatewayModalTest {
 	}
 	
 	@Test
-	public void testUpgradeFW(){
+	public void should_be_upgrade_new_ver(){
 		String oldBuild = ddt.getProperty("build.valid.old");
 		String newBuild = ddt.getProperty("build.valid.new");
 		onTest = new GatewayModal(onTest.upgradeFW(oldBuild).getCPE());
@@ -107,7 +103,7 @@ public class GatewayModalTest {
 		assertNotEquals(fwVer, newVer);
 	}
 	@Test
-	public void testUpgradeInvalidFW(){
+	public void should_not_be_upgrade_with_InvalidFW(){
 		String invalidBuild = ddt.getProperty("build.invalid");
 		String fwVer = onTest.getFWVersion();
 		onTest = new GatewayModal(onTest.upgradeFW(invalidBuild).getCPE());
@@ -116,7 +112,7 @@ public class GatewayModalTest {
 	}
 	
 	@Test
-	public void testUpTime() {
+	public void should_present_correct_system_uptime() {
 		Long cur = onTest.getUpTime();
 		onTest.fadeoutModal();
 		onTest = new GatewayModal(onTest.getCPE());
