@@ -34,6 +34,8 @@ public class GatewayModal extends Modal {
 			.id("upgrade-wrong-ext-msg");
 	private static final By BY_TOO_BIG_ERR = By.id("upgrade-too-big-msg");
 	private static final By BY_FAIL_ERR = By.id("upgrade-failed-msg");
+	private static final By BY_NTP = By.name("system_network_timezone");
+	private static final By BY_TZ_DROP = By.name("system_timezone");
 
 	public GatewayModal(CPE cpe) {
 		super(cpe, 0);
@@ -93,7 +95,7 @@ public class GatewayModal extends Modal {
 
 	public Long getUpTime() {
 		List<WebElement> ctl_group = page.findElements(BY_CTLS);
-		Long upTime = 0L;
+		Long upTime = null;
 		for (WebElement e : ctl_group) {
 			if (e.findElement(BY_CTL_LBL).getText().equals("Uptime")) {
 				upTime = textToSecs(e.findElement(BY_CTL_DESC).getText());
@@ -101,6 +103,71 @@ public class GatewayModal extends Modal {
 			}
 		}
 		return upTime;
+	}
+
+	public boolean isSyncNTP() {
+		try {
+			return waiter.until(
+					ExpectedConditions.visibilityOfElementLocated(BY_NTP))
+					.isSelected();
+		} catch (TimeoutException toe) {
+			loger.error("Fail to find the 'Network Timezone' box to check");
+			return false;
+		}
+	}
+
+	public String getTimezone() {
+		List<WebElement> ctl_group = page.findElements(BY_CTLS);
+		String timeZone = null;
+		for (WebElement e : ctl_group) {
+			if (e.findElement(BY_CTL_LBL).getText().equals("Current Timezone")) {
+				timeZone = e.findElement(BY_CTL_DESC).getText();
+				break;
+			}
+		}
+		return timeZone;
+	}
+
+	public void setTimezone(String tz) {
+		if (tz.equals("NTP")) {
+			if (isSyncNTP()) {
+				loger.debug("Time is synced from NTP server");
+			} else {
+				try {
+					waiter.until(
+							ExpectedConditions
+									.visibilityOfElementLocated(BY_NTP))
+							.click();
+					saveChanges();
+				} catch (TimeoutException toe) {
+					loger.error("Fail to find the 'Network Timezone' box to selected");
+				}
+			}
+		} else {
+			if (isSyncNTP()) {
+				loger.debug("System time is sycned with NTP, trying to unSycn");
+				try {
+					waiter.until(
+							ExpectedConditions
+									.visibilityOfElementLocated(BY_NTP))
+							.click();
+				} catch (TimeoutException toe) {
+					loger.error("Fail to find the 'Network Timezone' box to selected");
+				}
+			}
+			try {
+				waiter.until(
+						ExpectedConditions
+								.visibilityOfElementLocated(BY_TZ_DROP))
+						.findElement(By.linkText(tz)).click();
+			} catch (TimeoutException toe) {
+				loger.error("Fail to find the 'Timezone' drop-down list");
+			}
+			if (!saveChanges()) {
+				loger.error("Fail to save teh change on Timezone settings");
+				cancelChanges();
+			}
+		}
 	}
 
 	/**
@@ -199,8 +266,32 @@ public class GatewayModal extends Modal {
 	 * @return
 	 */
 	private Long textToSecs(String text) {
-		// the format like 1hours 20min 20sec
+		// the format like 1days 1hours 20min 20sec
 		String[] items = (text.replaceAll("sec", "")).split("\\D+ ");
+
+		if (3 < items.length) {
+			long y = 0L;
+			long d = 0L;
+			long h = 0L;
+			long m = 0L;
+			long s = 0L;
+			// like 1years 1days 1hours 1min 20sec
+			if (items.length == 5) {
+				y = Long.parseLong(items[0]) * 365 * 24 * 3600;
+				d = Long.parseLong(items[1]) * 24 * 3600;
+				h = Long.parseLong(items[2]) * 3600;
+				m = Long.parseLong(items[3]) * 60;
+				s = Long.parseLong(items[4]);
+			} else {
+				// 1days 1hours 1min 20sec
+				d = Long.parseLong(items[0]) * 24 * 3600;
+				h = Long.parseLong(items[1]) * 3600;
+				m = Long.parseLong(items[2]) * 60;
+				s = Long.parseLong(items[3]);
+			}
+			return y + d + h + m + s;
+		}
+		// like 1hours 1min 20sec
 		Integer times = items.length - 1;
 		Long sec = 0L;
 		for (String i : items) {

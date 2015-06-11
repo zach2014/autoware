@@ -1,8 +1,6 @@
 package com.tch.gui.page.modal.utest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -120,6 +118,18 @@ public class GatewayModalTest {
 		assertTrue(cur.compareTo(later) < 0);
 	}
 	
+	@Test
+	public void should_be_able_to_sync_time_2_NTP(){
+		onTest.setTimezone("NTP");
+		assertTrue(onTest.isSyncNTP());
+	}
 	
+	@Test
+	public void should_be_able_2_custo_time_zone(){
+		String tz = ddt.getProperty("CPE.timezone", "UTC");
+		onTest.setTimezone(tz);
+		assertFalse(onTest.isSyncNTP());
+		assertEquals(tz, onTest.getTimezone());
+	}
 
 }

@@ -12,7 +12,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.openqa.selenium.ElementNotVisibleException;
+import org.openqa.selenium.TimeoutException;
 
 import com.tch.common.CPE;
 import com.tch.gui.page.main.HomePage;
@@ -51,7 +51,7 @@ public class ModalTest {
 		onTest.showAdvanced();
 		onTest.hideAdvanced();
 		onTest.showAdvanced();
-		ex.expect(ElementNotVisibleException.class);
+		ex.expect(TimeoutException.class);
 		onTest.showAdvanced();
 	}
 
@@ -73,13 +73,13 @@ public class ModalTest {
 	@Test
 	public void should_save_modification_by_save_btn() {
 		Modal modalP = onTest.enterModal(0);
-		ex.expect(ElementNotVisibleException.class);
+		ex.expect(TimeoutException.class);
 		assertTrue(modalP.saveChanges());
 	}
 
 	@Test
 	public void should_cancel_modification_by_cancel_btn() {
-		ex.expect(ElementNotVisibleException.class);
+		ex.expect(TimeoutException.class);
 		HomePage hm = onTest.cancelChanges();
 		hm.enterModal(1);
 		assertNotNull(onTest.cancelChanges());

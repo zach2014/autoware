@@ -8,8 +8,6 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
-import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -33,18 +31,20 @@ public class Modal extends HomePage {
 	public static final By BY_CLS_MDAL_BDY = By.className("modal-body");
 
 	static final Logger loger = LogManager.getLogger(Modal.class.getName());
-	
 
 	public Modal(CPE cpe, Integer id) {
 		super(cpe);
-		List<WebElement> cards = waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(HomePage.BY_CLS_SCARD));
+		List<WebElement> cards = waiter.until(ExpectedConditions
+				.presenceOfAllElementsLocatedBy(HomePage.BY_CLS_SCARD));
 		cards.get(id).click();
 		By card_modal = By.className("modal");
 		try {
-			waiter.until(ExpectedConditions.presenceOfElementLocated(card_modal));
+			waiter.until(ExpectedConditions
+					.presenceOfElementLocated(card_modal));
 		} catch (TimeoutException toe) {
-			loger.error("The modal configurable card does not fade in as expected" );
-			throw new IllegalStateException("Fail to enter modal of indexed " + id);
+			loger.error("The modal configurable card does not fade in as expected");
+			throw new IllegalStateException("Fail to enter modal of indexed "
+					+ id);
 		}
 	}
 
@@ -52,53 +52,47 @@ public class Modal extends HomePage {
 	 * To enter another Modal page from one Modal page, back home page firstly.
 	 */
 	@Override
-	public Modal enterModal(int id_card){
+	public Modal enterModal(int id_card) {
 		return fadeoutModal().enterModal(id_card);
 	}
-	
-	public void showAdvanced() throws NoSuchElementException,
-			ElementNotVisibleException {
-		WebElement icon_plus = page.findElement(BY_ICON_PLUS);
-		icon_plus.click();
+
+	public void showAdvanced() {
+		waiter.until(ExpectedConditions.visibilityOfElementLocated(BY_ICON_PLUS))
+				.click();
 	}
 
-	public void hideAdvanced() throws NoSuchElementException,
-			ElementNotVisibleException {
-		WebElement icon_minus = page.findElement(BY_ICON_MINUS);
-		icon_minus.click();
+	public void hideAdvanced() {
+		waiter.until(ExpectedConditions.visibilityOfElementLocated(BY_ICON_MINUS))
+				.click();
 	}
 
-	public void refreshData() throws NoSuchElementException {
-		WebElement icon_refresh = page.findElement(BY_ICON_REFRESH);
-		icon_refresh.click();
+	public void refreshData() {
+		waiter.until(ExpectedConditions.visibilityOfElementLocated(BY_ICON_REFRESH))
+				.click();
 	}
 
-	public HomePage closeCfgPage() throws NoSuchElementException,
-			ElementNotVisibleException {
-		WebElement btn_close = page.findElement(BY_BTN_CLOSE);
-		btn_close.click();
+	public HomePage closeCfgPage() {
+		waiter.until(ExpectedConditions.visibilityOfElementLocated(BY_BTN_CLOSE))
+				.click();
 		return new HomePage(this);
 	}
 
-	public boolean saveChanges() throws NoSuchElementException,
-			ElementNotVisibleException {
-		WebElement btn_save = page.findElement(BY_BTN_SAVE);
-		btn_save.click();
-		waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(HomePage.BY_CLS_SCARD));
-		return true;
+	public boolean saveChanges() {
+		waiter.until(ExpectedConditions.visibilityOfElementLocated(BY_BTN_SAVE))
+				.click();
+		return waiter.until(ExpectedConditions
+				.invisibilityOfElementLocated(BY_BTN_SAVE));
 	}
 
-	public HomePage cancelChanges() throws NoSuchElementException,
-			ElementNotVisibleException {
-		WebElement btn_cancel = page.findElement(BY_BTN_CANCEL);
-		btn_cancel.click();
+	public HomePage cancelChanges() {
+		waiter.until(ExpectedConditions.visibilityOfElementLocated(BY_BTN_CANCEL))
+				.click();
 		return new HomePage(this);
 	}
 
-	public HomePage fadeoutModal() throws NoSuchElementException {
-		WebElement icon_remove = page.findElement(BY_ICON_REMOVE);
-		icon_remove.click();
+	public HomePage fadeoutModal() {
+		waiter.until(ExpectedConditions.visibilityOfElementLocated(BY_ICON_REMOVE))
+				.click();
 		return new HomePage(this);
 	}
 }
-  

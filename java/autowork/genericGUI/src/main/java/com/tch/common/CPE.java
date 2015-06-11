@@ -171,8 +171,10 @@ public class CPE implements SSH, WEB {
 				"GUI.timer.pageload", "5"));
 		long implWaitTime = Long.parseLong(prop.getProperty(
 				"GUI.timer.implicitlyWait", "3"));
-		if ("chrome".equalsIgnoreCase(browser))
+		if ("chrome".equalsIgnoreCase(browser)) {
+			System.setProperty("webdriver.chrome.driver", this.readProp("webdriver.chrome.driver.path"));
 			web_Conn = new ChromeDriver();
+		}
 		else if ("ie".equalsIgnoreCase(browser))
 			web_Conn = new InternetExplorerDriver();
 		else
