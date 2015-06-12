@@ -100,7 +100,6 @@ public class CPE implements SSH, WEB {
 	 */
 	public static void reset() {
 		loger.debug("Resetting instance of CPE");
-		;
 		if (instance.ssh_Conn != null && instance.ssh_Conn.isConnected()) {
 			instance.closeSSH();
 			instance.ssh_Conn = null;
@@ -329,11 +328,11 @@ public class CPE implements SSH, WEB {
 			JSch.setConfig(S_H_CHECKING, "no");
 			JSch jsch = new JSch();
 			String ssh_userName = readProp("ssh.username");
-			String ssh_passwd = readProp("ssh.passwor");
+			String ssh_passwd = readProp("ssh.password");
 			String ssh_key_file = readProp("CPE.ssh.id");
 			ssh_Conn = jsch.getSession(ssh_userName, this.getHost());
 			ssh_Conn.setPassword(ssh_passwd);
-			if (ssh_key_file.isEmpty()) {
+			if (null == ssh_key_file) {
 				loger.debug("To open SSH session with username/password: " + ssh_userName+ "/" + ssh_passwd);
 				ssh_Conn.connect();
 			} else {

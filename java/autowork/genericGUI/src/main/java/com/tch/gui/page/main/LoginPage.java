@@ -41,20 +41,29 @@ public class LoginPage {
 		page = gw.getWebPage();
 		waiter = new WebDriverWait(page, Long.parseLong(cpe
 				.readProp("GUI.timer.explicitlyWait")));
-		try {
-			waiter.until(
-					ExpectedConditions
-							.elementToBeClickable(HomePage.BY_BTN_SIGNIN))
-					.click();
-			if (waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
-				loger.debug("Navigate to login page successfully");
+		if (!waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
+			try {
+				if (cpe.getGivenLoginUrl().isEmpty()) {
+					waiter.until(
+							ExpectedConditions
+									.elementToBeClickable(HomePage.BY_BTN_SIGNIN))
+							.click();
+				} else {
+					page.navigate().to(cpe.getGivenLoginUrl());
+				}
+
+				if (waiter
+						.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
+					loger.debug("Navigate to login page successfully");
+				}
+			} catch (TimeoutException toe) {
+				loger.error("The title of current page is " + page.getTitle()
+						+ " not " + cpe.getLPageTitle());
+				throw new IllegalStateException(
+						"Fail to open LoginPage as expected");
 			}
-		} catch (TimeoutException toe) {
-			loger.error("The title of current page is " + page.getTitle()
-					+ " not " + cpe.getLPageTitle());
-			throw new IllegalStateException(
-					"Fail to open LoginPage as expected");
 		}
+		loger.debug("Displayed is login page");
 	}
 
 	public LoginPage(CPE gw, String url) {

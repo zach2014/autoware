@@ -61,6 +61,6 @@ public class CPETest {
 		String uci_show = "uci show ";
 		String wan_ifname = "network.wan.ifname";
 		String re = gw.remoteExec(uci_show + wan_ifname);
-		assertEquals(wan_ifname+ "=\'" + gw.readProp("CPE.network.wan.if") + "\'", re);
+		assertTrue(re.contains(gw.readProp("CPE.network.wan.if")));
 	}	
 }

@@ -76,8 +76,7 @@ public class HomePage {
 	 */
 	private static void requireLogin(CPE cpe, WebDriver page) {
 		// home.url but redirect to login page
-		if (page.getTitle().equals(cpe.getLPageTitle())
-				&& page.getCurrentUrl().equals(cpe.getHPageURL())) {
+		if (page.getTitle().equals(cpe.getLPageTitle())) {
 			LoginPage login1StPage = new LoginPage(cpe);
 			try {
 				login1StPage.login(cpe.getWebUser(), cpe.getWebPasswd());
