@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 
 import com.jcraft.jsch.ChannelExec;
@@ -177,8 +178,13 @@ public class CPE implements SSH, WEB {
 		}
 		else if ("ie".equalsIgnoreCase(browser))
 			web_Conn = new InternetExplorerDriver();
-		else
-			web_Conn = new FirefoxDriver();
+		else {
+			FirefoxProfile profile = new FirefoxProfile();
+			// set proxy preference, 3=no_proxy, 4=auto-detect
+			profile.setPreference("network.proxy.type", 3);
+			web_Conn = new FirefoxDriver(profile);
+		}
+			
 		if (null != web_Conn) {
 			web_Conn.manage().timeouts()
 					.pageLoadTimeout(pageLoadTimer, TimeUnit.SECONDS);

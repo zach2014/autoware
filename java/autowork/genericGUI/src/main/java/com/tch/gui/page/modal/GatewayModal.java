@@ -10,6 +10,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.tch.common.CPE;
@@ -106,68 +107,72 @@ public class GatewayModal extends Modal {
 	}
 
 	public boolean isSyncNTP() {
-		try {
-			return waiter.until(
-					ExpectedConditions.visibilityOfElementLocated(BY_NTP))
-					.isSelected();
-		} catch (TimeoutException toe) {
-			loger.error("Fail to find the 'Network Timezone' box to check");
+		WebElement box = locateTimeBox();
+		if (null == box)
 			return false;
-		}
+		return box.isSelected();
 	}
 
+	/**
+	 * To get Current Timezone info
+	 * 
+	 * @return
+	 */
 	public String getTimezone() {
 		List<WebElement> ctl_group = page.findElements(BY_CTLS);
 		String timeZone = null;
-		for (WebElement e : ctl_group) {
-			if (e.findElement(BY_CTL_LBL).getText().equals("Current Timezone")) {
-				timeZone = e.findElement(BY_CTL_DESC).getText();
-				break;
+		if (isSyncNTP()) {
+			for (WebElement e : ctl_group) {
+				if (e.findElement(BY_CTL_LBL).getText()
+						.equals("Current Timezone")) {
+					timeZone = e.findElement(BY_CTL_DESC).getText();
+					break;
+				}
 			}
+			return timeZone;
 		}
-		return timeZone;
+
+		Select tzs = new Select(waiter.until(ExpectedConditions
+				.presenceOfElementLocated(BY_TZ_DROP)));
+		return tzs.getFirstSelectedOption().getText();
 	}
 
-	public void setTimezone(String tz) {
-		if (tz.equals("NTP")) {
-			if (isSyncNTP()) {
-				loger.debug("Time is synced from NTP server");
-			} else {
-				try {
-					waiter.until(
-							ExpectedConditions
-									.visibilityOfElementLocated(BY_NTP))
-							.click();
-					saveChanges();
-				} catch (TimeoutException toe) {
-					loger.error("Fail to find the 'Network Timezone' box to selected");
-				}
+	/**
+	 * To set system time zone by the specific name of zone, NTP is for syncing
+	 * time with NTP
+	 * 
+	 * @param zoneName
+	 */
+	public void setTimezone(String zoneName) {
+		if (zoneName.equals("NTP")) {
+			// set time to sycn NTP server
+			WebElement sycnNTP = locateTimeBox();
+			if (null != sycnNTP) {
+				if (!sycnNTP.isSelected())
+					sycnNTP.click();
+				loger.info("System Time is syncing with " + zoneName);
 			}
 		} else {
 			if (isSyncNTP()) {
 				loger.debug("System time is sycned with NTP, trying to unSycn");
+				locateTimeBox().click();
+			}
+			// set time zone from drop-down list
+			if (!getTimezone().equals(zoneName)) {
 				try {
-					waiter.until(
-							ExpectedConditions
-									.visibilityOfElementLocated(BY_NTP))
-							.click();
+					Select tzs = new Select(waiter.until(ExpectedConditions
+							.presenceOfElementLocated(BY_TZ_DROP)));
+					tzs.selectByVisibleText(zoneName);
 				} catch (TimeoutException toe) {
-					loger.error("Fail to find the 'Network Timezone' box to selected");
+					loger.error("Fail to find the 'Timezone' drop-down list");
+				}
+				if (!saveChanges()) {
+					loger.error("Fail to save teh change on Timezone settings");
+					cancelChanges();
 				}
 			}
-			try {
-				waiter.until(
-						ExpectedConditions
-								.visibilityOfElementLocated(BY_TZ_DROP))
-						.findElement(By.linkText(tz)).click();
-			} catch (TimeoutException toe) {
-				loger.error("Fail to find the 'Timezone' drop-down list");
-			}
-			if (!saveChanges()) {
-				loger.error("Fail to save teh change on Timezone settings");
-				cancelChanges();
-			}
 		}
+		loger.info("Current Timezone is " + zoneName);
 	}
 
 	/**
@@ -325,4 +330,28 @@ public class GatewayModal extends Modal {
 			}
 		});
 	}
+
+	/**
+	 * To locate the specific check-box which is visible to check
+	 * 
+	 * @return webelement
+	 */
+	private WebElement locateTimeBox() {
+		try {
+			List<WebElement> boxes = waiter.until(ExpectedConditions
+					.presenceOfAllElementsLocatedBy(BY_NTP));
+			for (WebElement e : boxes) {
+				if (e.getAttribute("class").equals("monitor-changes")
+						&& e.getAttribute("value").equals("_TRUE_")) {
+					return e;
+				}
+			}
+			loger.error("Fail to locale matched box");
+			return null;
+		} catch (TimeoutException toe) {
+			loger.error("Fail to find the 'Network Timezone' box to check");
+			return null;
+		}
+	}
+
 }
