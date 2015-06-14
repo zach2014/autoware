@@ -41,7 +41,16 @@ public class LoginPage {
 		page = gw.getWebPage();
 		waiter = new WebDriverWait(page, Long.parseLong(cpe
 				.readProp("GUI.timer.explicitlyWait")));
-		if (!waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()))) {
+		boolean isRedirected = false; // 1st page is home page, not redirected to login page in generic
+		try {
+			isRedirected = waiter.until(ExpectedConditions.titleIs(cpe.getLPageTitle()));
+			loger.info("The web access is redirected to login page firstly");
+		} catch (TimeoutException toe){
+			loger.debug("Home page display directly without redirect");
+		}
+		
+		if (! isRedirected) {
+			// if no redirected, navigate to login page from home page
 			try {
 				if (cpe.getGivenLoginUrl().isEmpty()) {
 					waiter.until(
@@ -63,7 +72,6 @@ public class LoginPage {
 						"Fail to open LoginPage as expected");
 			}
 		}
-		loger.debug("Displayed is login page");
 	}
 
 	public LoginPage(CPE gw, String url) {
