@@ -83,7 +83,7 @@ public class GatewayModalTest {
 	}
 
 	@Test
-	public void shoudl_do_restart_by_restartBtn() {
+	public void should_do_restart_by_restartBtn() {
 		CPE tmp = onTest.getCPE();
 		HomePage hm;
 		try {
