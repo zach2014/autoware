@@ -16,8 +16,10 @@ localrc
 **/.recommenders/*
 
 java/autowork/genericGUI/.metadata/*
-java/autowork/genericGUI/.classpath
+java/autowork/genericGUI/*classpath
 **/.classpath
 **/.project
 **/.settings/*
 **/target/*
+**/build/*
+**/.gradle/*
