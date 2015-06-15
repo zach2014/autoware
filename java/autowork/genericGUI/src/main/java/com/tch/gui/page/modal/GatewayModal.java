@@ -185,7 +185,10 @@ public class GatewayModal extends Modal {
 	public HomePage upgradeFW(String newBuild) {
 		page.findElement(BY_FW_UPGRADER).sendKeys(newBuild);
 		page.findElement(BY_BTN_FW_UPGRADE).click();
+		loger.info("Upgrade: Build path is " + newBuild);
 		List<WebElement> errors = new ArrayList<WebElement>();
+
+		// check transfer message
 		try {
 			loger.info("Upgrade: "
 					+ waiter.until(
@@ -195,6 +198,7 @@ public class GatewayModal extends Modal {
 		} catch (TimeoutException toe) {
 			loger.warn("UPgrade: No see transfer message in Firmware upgrade.");
 		}
+		// check busy message
 		try {
 			loger.info("Upgrade: "
 					+ waiter.until(
@@ -204,13 +208,13 @@ public class GatewayModal extends Modal {
 		} catch (TimeoutException toe) {
 			loger.warn("Upgrade: No see busy message in Firmware upgrade.");
 		}
-
+		// check kinds of error message
 		try {
 			// polling upgrade-nofile-msg
 			errors.add(waiter.until(ExpectedConditions
 					.visibilityOfElementLocated(BY_NO_FILE_ERR)));
 		} catch (TimeoutException toe) {
-			// set build file as expected for that error
+			// set build file as expected for no that error
 			loger.info("Upgrade: No see error message for NOFILE to use");
 		}
 		try {
@@ -221,7 +225,6 @@ public class GatewayModal extends Modal {
 			// pass to check the build file format
 			loger.info("Upgrade: No see error message for INVALID_FILE to use");
 		}
-
 		try {
 			// polling upgrade-too-big-msg
 			errors.add(waiter.until(ExpectedConditions
@@ -251,10 +254,14 @@ public class GatewayModal extends Modal {
 			} catch (TimeoutException toe2) {
 				loger.info("Upgrade: Pass to check error again, be sure upgrade is in progress as expected.");
 			}
-			HomePage hm = fadeoutModal();
+			/*
+			 * HomePage hm = fadeoutModal(); use too much time to polling
+			 * messages, so can not use fadeoutModal to back home page, just
+			 * wait after reboot to re-construct home page
+			 */
 			// handle system rebooting
 			rebootup(page);
-			return hm;
+			return new HomePage(this);
 		} else {
 			// had see error message, upgrade is in interruption
 			for (WebElement e : errors) {

@@ -1,9 +1,8 @@
 package com.tch.gui.page.main.utest;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import org.junit.After;
@@ -14,13 +13,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.jcraft.jsch.JSchException;
 import com.tch.common.CPE;
 import com.tch.gui.page.main.HomePage;
 import com.tch.gui.page.main.LoginPage;
 import com.tch.gui.page.modal.Modal;
 
 public class HomePageTest {
-	private static CPE gw;
+	private CPE gw;
 	static Properties ddt = new Properties();
 	private HomePage onTest;
 
@@ -41,13 +41,13 @@ public class HomePageTest {
 
 	@After
 	public void tearDown() throws Exception {
-		CPE.reset();
-		CPE.build(); // reset CPE to be with default properties
+		onTest = null;
+		CPE.build();
 	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		gw.closeWEB();
+		CPE.reset();
 	}
 
 	@Test
@@ -66,14 +66,17 @@ public class HomePageTest {
 	@Test
 	public void should_navigate_2_login_page() {
 		LoginPage loginP = onTest.goLogin();
-		assertTrue(loginP.getPage().getTitle().equalsIgnoreCase("Login"));
+		assertTrue(loginP.getPage().getTitle().equals(gw.getLPageTitle()));
 	}
 
 	@Test
 	public void should_open_login_page_with_url() throws Exception {
 		CPE.build(ddt.getProperty("utest.spec.prop"));
 		LoginPage loginP = onTest.goLogin();
-		assertTrue(loginP.getPage().getTitle().equalsIgnoreCase("Login"));
+		String cur_Title = loginP.getPage().getTitle();
+		String lTitle = gw.getLPageTitle();
+		CPE.build();
+		assertEquals(lTitle, cur_Title);
 	}
 
 	@Test
@@ -81,24 +84,21 @@ public class HomePageTest {
 		CPE.build(ddt.getProperty("utest.ex.prop"));
 		ex_rule.expect(IllegalStateException.class);
 		LoginPage loginP = onTest.goLogin();
-		assertTrue(loginP.getPage().getTitle()
-				.equalsIgnoreCase("404 Not Found"));
+		assertEquals("404 Not Found", loginP.getPage().getTitle());
 	}
 
 	@Test
-	public void should_be_back_2_home_page_aftr_logpout() throws InterruptedException {
+	public void should_be_back_2_home_page_aftr_logpout() throws IOException, JSchException {
 		HomePage.logout(onTest.getPage());
-		onTest.goLogin().login("admin", "test");
+		onTest.goLogin().login(gw.getWebUser(), gw.getWebPasswd());
 		HomePage.logout(onTest.getPage());
 		assertFalse(HomePage.isLogged(onTest.getPage()));
-
 	}
 
 	@Test
 	public void should_no_issue_when_dup_logout(){
 		HomePage.logout(onTest.getPage());
 		HomePage.logout(onTest.getPage());
-		assertFalse(HomePage.isLogged(onTest.getPage()));
-		
+		assertFalse(HomePage.isLogged(onTest.getPage()));	
 	}
 }

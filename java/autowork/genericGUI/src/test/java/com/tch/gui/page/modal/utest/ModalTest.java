@@ -37,13 +37,13 @@ public class ModalTest {
 	}
 
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown() {
 		onTest = null;
 	}
 	
 	@AfterClass
 	public static void tearDownAfterClass(){
-		gw.closeWEB();
+		CPE.reset();
 	}
 
 	@Test
@@ -58,16 +58,12 @@ public class ModalTest {
 	@Test
 	public void should_refresh_modal_config_card() {
 		onTest.refreshData();
-		HomePage hp = onTest.fadeoutModal();
-		onTest = hp.enterModal(0);
-		onTest.refreshData();
+		assertNotNull(onTest.fadeoutModal());
 	}
 
 	@Test
 	public void should_be_back_homePage_aftr_close_modal_card() {
-		HomePage home = onTest.closeCfgPage();
-		Modal modalP = home.enterModal(0);
-		modalP.showAdvanced();		
+		assertNotNull(onTest.closeCfgPage());		
 	}
 
 	@Test
