@@ -29,7 +29,7 @@ import com.jcraft.jsch.Session;
  */
 /**
  * @author zach15
- *
+ * 
  */
 public class CPE implements SSH, WEB {
 
@@ -45,7 +45,7 @@ public class CPE implements SSH, WEB {
 
 	private static final String S_H_CHECKING = "StrictHostKeyChecking";
 	private static final long WAIT_4_CH_CLS = 1000;
-	private static final String CPE_DEF_PROP_FILE = "cpe.properties";
+	// private static final String CPE_DEF_PROP_FILE = "cpe.properties";
 	private static final String DEF_CLI_PASSWD = "cat /proc/rip/0124 | head -c 8";
 
 	private String variant;
@@ -64,18 +64,13 @@ public class CPE implements SSH, WEB {
 	 * 
 	 * @throws IOException
 	 */
-	public static void build() throws IOException {
-		InputStream propInput = CPE.class.getClassLoader().getResourceAsStream(
-				CPE_DEF_PROP_FILE);
-		try {
-			instance.prop.load(propInput);
-			instance.setup();
-		} catch (IOException io) {
-			loger.error("Faile to load CPE Properties from "
-					+ CPE_DEF_PROP_FILE);
-			throw io;
-		}
-	}
+	/*
+	 * public static void build() throws IOException { InputStream propInput =
+	 * CPE.class.getClassLoader().getResourceAsStream( CPE_DEF_PROP_FILE); try {
+	 * instance.prop.load(propInput); instance.setup(); } catch (IOException io)
+	 * { loger.error("Faile to load CPE Properties from " + CPE_DEF_PROP_FILE);
+	 * throw io; } }
+	 */
 
 	/**
 	 * To load required properties from given property file
@@ -86,27 +81,26 @@ public class CPE implements SSH, WEB {
 	public static void build(String propFilePath) throws IOException {
 		try {
 			FileInputStream propInput = new FileInputStream(propFilePath);
+			instance.prop.clear();
 			instance.prop.load(propInput);
 			instance.setup();
 		} catch (FileNotFoundException io) {
 			loger.error("Faile to load CPE Properties from " + propFilePath);
-			loger.info("Try to load properties from " + CPE_DEF_PROP_FILE);
-			build();
 		}
 	}
 
 	/**
-	 * To close all opened remote connections and clean associtated properties,
+	 * To close all opened remote connections and clean associated properties,
 	 */
 	public static void reset() {
-		loger.debug("Resetting instance of CPE");
+		loger.debug("Destroy the instance of CPE");
 		if (instance.ssh_Conn != null && instance.ssh_Conn.isConnected()) {
 			instance.closeSSH();
 			instance.ssh_Conn = null;
 		}
 		instance.closeWEB();
 		instance.web_Conn = null;
-		instance.prop = new Properties();
+		instance.prop.clear();
 	}
 
 	private CPE() {
@@ -172,10 +166,10 @@ public class CPE implements SSH, WEB {
 		long implWaitTime = Long.parseLong(prop.getProperty(
 				"GUI.timer.implicitlyWait", "3"));
 		if ("chrome".equalsIgnoreCase(browser)) {
-			System.setProperty("webdriver.chrome.driver", this.readProp("webdriver.chrome.driver.path"));
+			System.setProperty("webdriver.chrome.driver",
+					this.readProp("webdriver.chrome.driver.path"));
 			web_Conn = new ChromeDriver();
-		}
-		else if ("ie".equalsIgnoreCase(browser))
+		} else if ("ie".equalsIgnoreCase(browser))
 			web_Conn = new InternetExplorerDriver();
 		else {
 			FirefoxProfile profile = new FirefoxProfile();
@@ -183,7 +177,7 @@ public class CPE implements SSH, WEB {
 			profile.setPreference("network.proxy.type", 3);
 			web_Conn = new FirefoxDriver(profile);
 		}
-			
+
 		if (null != web_Conn) {
 			web_Conn.manage().timeouts()
 					.pageLoadTimeout(pageLoadTimer, TimeUnit.SECONDS);
@@ -287,7 +281,7 @@ public class CPE implements SSH, WEB {
 	public void closeWEB() {
 		if (web_Conn != null) {
 			web_Conn.close();
-			//web_Conn.quit();
+			// web_Conn.quit();
 			loger.debug("WEB seesion to CPE is quit");
 		}
 	}
@@ -333,7 +327,8 @@ public class CPE implements SSH, WEB {
 			ssh_Conn = jsch.getSession(ssh_userName, this.getHost());
 			ssh_Conn.setPassword(ssh_passwd);
 			if (null == ssh_key_file) {
-				loger.debug("To open SSH session with username/password: " + ssh_userName+ "/" + ssh_passwd);
+				loger.debug("To open SSH session with username/password: "
+						+ ssh_userName + "/" + ssh_passwd);
 				ssh_Conn.connect();
 			} else {
 				jsch.addIdentity(ssh_key_file);
