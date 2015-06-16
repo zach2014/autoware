@@ -230,9 +230,10 @@ public class HomePage {
 		}
 		String url = cpe.getGivenLoginUrl();
 		if (url.isEmpty()) {
-			page.findElement(BY_BTN_SIGNIN).click();
+			// navigate to login via sign_in btn
 			return new LoginPage(this);
 		} else {
+			// navigate to login via givenurl
 			return new LoginPage(cpe, url);
 		}
 	}

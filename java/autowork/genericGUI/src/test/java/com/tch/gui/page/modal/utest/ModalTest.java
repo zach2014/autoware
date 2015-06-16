@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -19,7 +20,8 @@ import com.tch.gui.page.main.HomePage;
 import com.tch.gui.page.modal.Modal;
 
 public class ModalTest {
-	private static CPE gw; 
+	private static CPE gw;
+	static Properties ddt = new Properties();
 	Modal onTest;
 	
 	@Rule
@@ -27,7 +29,9 @@ public class ModalTest {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws IOException {
-		CPE.build();
+		ddt.load(GatewayModalTest.class.getClassLoader().getResourceAsStream(
+				"ddt.properties"));
+		CPE.build(ddt.getProperty("dut.def.prop"));
 		gw = CPE.instance;
 	}
 	

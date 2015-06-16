@@ -26,10 +26,10 @@ public class GatewayModalTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws IOException {
-		CPE.build();
-		gw = CPE.instance;
 		ddt.load(GatewayModalTest.class.getClassLoader().getResourceAsStream(
 				"ddt.properties"));
+		CPE.build(ddt.getProperty("dut.def.prop"));
+		gw = CPE.instance;
 	}
 
 	@Before

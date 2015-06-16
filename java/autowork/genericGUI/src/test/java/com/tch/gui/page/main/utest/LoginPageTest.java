@@ -5,18 +5,16 @@ package com.tch.gui.page.main.utest;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.io.IOException;
+import java.util.Properties;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
-import com.jcraft.jsch.JSchException;
 import com.tch.common.CPE;
 import com.tch.gui.page.main.HomePage;
 import com.tch.gui.page.main.LoginPage;
@@ -27,14 +25,13 @@ import com.tch.gui.page.main.LoginPage;
  */
 public class LoginPageTest {
 	private static CPE gw;
+	static Properties ddt = new Properties();
 	private LoginPage onTest;
-
-	@Rule
-	public ExpectedException ex = ExpectedException.none();
 
 	@BeforeClass
 	public static void setupBeforeClass() throws Exception {
-		CPE.build();
+		ddt.load(HomePageTest.class.getClassLoader().getResourceAsStream("ddt.properties"));
+		CPE.build(ddt.getProperty("dut.def.prop"));
 		gw = CPE.instance;
 	}
 
@@ -54,8 +51,8 @@ public class LoginPageTest {
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		gw.closeWEB();
-		gw.closeSSH();
+		gw = null;
+		CPE.reset();
 	}
 
 	@Test
@@ -67,13 +64,16 @@ public class LoginPageTest {
 	}
 
 	@Test
-	public void should_go_logged_homPage_aftr_login() throws InterruptedException, IOException,
-			JSchException {
-		assertTrue(onTest.login(gw.getWebUser(), gw.getWebPasswd()));
+	public void should_go_logged_homPage_aftr_login() {
+		try{
+			assertTrue(onTest.login(gw.getWebUser(), gw.getWebPasswd()));
+		} catch(Exception e){
+			fail(e.getMessage());
+		}
 	}
 
 	@Test
-	public void should_not_logged_with_invalid_auth() throws InterruptedException {
+	public void should_not_logged_with_invalid_auth(){
 		assertFalse(onTest.login("admin", "invalid_passwd"));
 	}
 

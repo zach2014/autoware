@@ -1,6 +1,8 @@
 package com.tch.common;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -10,8 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.WebDriver;
 
-import com.jcraft.jsch.JSchException;
-
 public class CPETest {
 	static Properties ddt = new Properties();
 	private CPE gw;
@@ -19,7 +19,7 @@ public class CPETest {
 	@Before
 	public void setUp() throws Exception {
 		ddt.load(CPETest.class.getClassLoader().getResourceAsStream("ddt.properties"));
-		CPE.build(ddt.getProperty("utest.spec.prop"));
+		CPE.build(ddt.getProperty("dut.utest.prop"));
 		gw = CPE.instance;
 	}
 
@@ -30,13 +30,17 @@ public class CPETest {
 	}
 
 	@Test
-	public void should_only_one_inst_global() throws IOException{
+	public void should_only_one_inst_global() {
 		CPE gw1 = CPE.instance;
 		assertTrue(gw1 == gw);
 		CPE.reset();
 		gw1 = CPE.instance;
 		assertTrue(gw1 == gw);
-		CPE.build();
+		try {
+			CPE.build(ddt.getProperty("dut.def.prop"));
+		} catch (IOException e) {
+			fail(e.getMessage());
+		}
 		gw1 = CPE.instance;
 		assertTrue(gw1 == gw);		
 	}
@@ -50,17 +54,23 @@ public class CPETest {
 	}
 	
 	@Test
-	public void should_open_ssh_session() throws JSchException, IOException {
-		assertTrue(gw.openSSH());
-		String pass = gw.getWebPasswd();
-		assertFalse(pass.isEmpty());
+	public void should_open_ssh_session() {
+		try {
+			assertTrue(gw.openSSH());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 	@Test
-	public void should_exec_cli_remote() throws JSchException, IOException {
+	public void should_exec_cli_remote() {
 		String uci_show = "uci show ";
 		String wan_ifname = "network.wan.ifname";
-		String re = gw.remoteExec(uci_show + wan_ifname);
-		assertTrue(re.contains(gw.readProp("CPE.network.wan.if")));
+		try {
+			String re = gw.remoteExec(uci_show + wan_ifname);
+			assertTrue(re.contains(gw.readProp("CPE.network.wan.if")));
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}	
 }

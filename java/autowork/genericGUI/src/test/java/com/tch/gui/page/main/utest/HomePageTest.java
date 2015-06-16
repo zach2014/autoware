@@ -29,8 +29,8 @@ public class HomePageTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		CPE.build();
 		ddt.load(HomePageTest.class.getClassLoader().getResourceAsStream("ddt.properties"));
+		CPE.build(ddt.getProperty("dut.def.prop"));
 	}
 
 	@Before
@@ -42,7 +42,7 @@ public class HomePageTest {
 	@After
 	public void tearDown() throws Exception {
 		onTest = null;
-		CPE.build();
+		CPE.build(ddt.getProperty("dut.def.prop"));
 	}
 
 	@AfterClass
@@ -71,17 +71,17 @@ public class HomePageTest {
 
 	@Test
 	public void should_open_login_page_with_url() throws Exception {
-		CPE.build(ddt.getProperty("utest.spec.prop"));
+		CPE.build(ddt.getProperty("dut.utest.prop"));
 		LoginPage loginP = onTest.goLogin();
 		String cur_Title = loginP.getPage().getTitle();
 		String lTitle = gw.getLPageTitle();
-		CPE.build();
+		CPE.build(ddt.getProperty("dut.def.prop"));
 		assertEquals(lTitle, cur_Title);
 	}
 
 	@Test
 	public void should_not_open_login_page_4_invalid_url() throws Exception {
-		CPE.build(ddt.getProperty("utest.ex.prop"));
+		CPE.build(ddt.getProperty("dut.utest.ex.prop"));
 		ex_rule.expect(IllegalStateException.class);
 		LoginPage loginP = onTest.goLogin();
 		assertEquals("404 Not Found", loginP.getPage().getTitle());
