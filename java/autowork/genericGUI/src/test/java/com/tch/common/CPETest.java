@@ -1,6 +1,5 @@
 package com.tch.common;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -49,8 +48,7 @@ public class CPETest {
 	public void should_open_web_page() {
 		WebDriver browser = gw.getWebPage();
 		String hTitle = browser.getTitle();
-		assertEquals("Gateway", hTitle);
-		browser.close();
+		assertTrue("Gateway".equals(hTitle) ||"Login".equals(hTitle));
 	}
 	
 	@Test

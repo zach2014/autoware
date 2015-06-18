@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -160,7 +161,7 @@ public class CPE implements SSH, WEB {
 	 * specify in properties. Chrome and IE are supported as well
 	 */
 	public boolean openWEB() {
-		String browser = prop.getProperty("GUI.browser", "firefox");
+		String browser = prop.getProperty("web.browser", "firefox");
 		long pageLoadTimer = Long.parseLong(prop.getProperty(
 				"GUI.timer.pageload", "5"));
 		long implWaitTime = Long.parseLong(prop.getProperty(
@@ -215,6 +216,9 @@ public class CPE implements SSH, WEB {
 			openWEB();
 		}
 		web_Conn.get(url);
+		// handle the localized webui_language
+		web_Conn.manage().addCookie(new Cookie("webui_language",prop.getProperty("web.language", "en-us")));
+		web_Conn.navigate().refresh();
 		return web_Conn;
 	}
 
@@ -293,6 +297,12 @@ public class CPE implements SSH, WEB {
 		return givenUser;
 	}
 
+	/**
+	 * Get password for login from GUI, read it from properties of CPE, or response of command via SSH
+	 * @return password
+	 * @throws IOException
+	 * @throws JSchException
+	 */
 	public String getWebPasswd() throws IOException, JSchException {
 		String givenPass = readProp("web.password");
 		if (null == givenPass) {

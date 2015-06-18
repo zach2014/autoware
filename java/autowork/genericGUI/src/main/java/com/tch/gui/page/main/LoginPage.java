@@ -22,20 +22,24 @@ public class LoginPage {
 
 	public static final By BY_CANCEL_LINK = By.linkText("Cancel");
 	private static final String EX_MSG_LOGIN_FAIL = "Fail to login with exception";
-	protected static final String LOGIN_ERR_MSG = "Invalid Username or Password";
+	protected static final By BY_ERR_AUTH = By.id("erroruserpass");
 	public static final By BY_SIGN_ME_IN = By.id("sign-me-in");
 	public static final By BY_PASSWD_INPUT = By.id("srp_password");
 	public static final By BY_USRNM_INPUT = By.id("srp_username");
 
 	static final Logger loger = LogManager.getLogger(LoginPage.class.getName());
 
-	private final CPE cpe;
-	private WebDriver page;
+	protected  CPE cpe;
+	protected WebDriver page;
 	/**
 	 * To wait explicitly
 	 */
-	protected final WebDriverWait waiter;
-
+	protected WebDriverWait waiter;
+	
+	public LoginPage() {
+		// default constructor for sub-class to override 
+	}
+	
 	public LoginPage(CPE gw) {
 		cpe = gw;
 		page = gw.getWebPage();
@@ -87,7 +91,7 @@ public class LoginPage {
 			loger.error("The title of current page is " + page.getTitle()
 					+ " not " + cpe.getLPageTitle());
 			throw new IllegalStateException(
-					"Fail to open LoginPage as expected");
+					"Fail to open LoginPage with url: " + url);
 		}
 	}
 

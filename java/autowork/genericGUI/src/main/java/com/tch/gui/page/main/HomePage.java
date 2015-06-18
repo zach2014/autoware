@@ -23,16 +23,20 @@ import com.tch.gui.page.modal.Modal;
  */
 /**
  * @author zach15
- *
+ * 
  */
 public class HomePage {
 	public static final By BY_DRPDWN_TGGL = By
 			.cssSelector("button.btn.dropdown-toggle");
+	public static final By BY_CHNG_PSWD = By.id("changepass");
 	public static final By BY_SIGNOUT_LINK = By.id("signout");
 	private static final String LOGGED_STR = "logged";
 	public static final By BY_BTN_SIGNIN = By.id("signin");
 	public static final By BY_CLS_SCARD = By.className("smallcard");
 	static final Logger loger = LogManager.getLogger(HomePage.class.getName());
+	private static final By BY_NW_PWD_INPUT = By.id("srp_password_new_1");
+	private static final By BY_NW_PWD_RPT = By.id("srp_password_new_2");
+	private static final By BY_BTN_CHG_PWD = By.id("change-my-pass");
 
 	protected final CPE cpe;
 	protected WebDriver page;
@@ -82,10 +86,12 @@ public class HomePage {
 				login1StPage.login(cpe.getWebUser(), cpe.getWebPasswd());
 				page = login1StPage.getPage();
 			} catch (IOException e) {
-				loger.error("Read CPE properties file with exception: " + e.toString());
+				loger.error("Read CPE properties file with exception: "
+						+ e.toString());
 				loger.debug(e.getMessage());
 			} catch (JSchException e) {
-				loger.error("Setup remote SSH connection with exception: " + e.toString());
+				loger.error("Setup remote SSH connection with exception: "
+						+ e.toString());
 				loger.debug(e.getMessage());
 			}
 		}
@@ -211,12 +217,56 @@ public class HomePage {
 		}
 	}
 
-	public void changePasswd() {
+	/**
+	 * Change the password of logged user currently
+	 * 
+	 * @param newPasswd
+	 * @throws JSchException
+	 * @throws IOException
+	 */
+	public boolean changePasswd(String oldPasswd, String newPasswd) throws IOException,
+			JSchException {
 		if (this.isLogged()) {
-			// go to change password
-		} else {
-			// do login and then to change
+			// login firstly
+			page.findElement(BY_DRPDWN_TGGL).click();
+			page.findElement(BY_CHNG_PSWD).click();
+			if (waiter.until(ExpectedConditions.titleIs("Change password"))) {
+				page.findElement(LoginPage.BY_PASSWD_INPUT).sendKeys(oldPasswd);
+				page.findElement(BY_NW_PWD_INPUT).sendKeys(newPasswd);
+				page.findElement(BY_NW_PWD_RPT).sendKeys(newPasswd);
+				page.findElement(BY_BTN_CHG_PWD).click();
+				try {
+					// no erroruserpass message
+					if (waiter
+							.until(ExpectedConditions
+									.invisibilityOfElementLocated(LoginPage.BY_ERR_AUTH))) {
+						// no error, assume "Updating"
+						if (waiter.until(ExpectedConditions
+								.invisibilityOfElementWithText(BY_BTN_CHG_PWD,
+										"Updating"))) {
+							// updated password, back to home page as expected
+							return (waiter
+									.until(ExpectedConditions
+											.invisibilityOfElementLocated(BY_BTN_CHG_PWD)) && waiter
+									.until(ExpectedConditions.titleIs(cpe
+											.getHPageTitle())));
+						}
+						return false;
+					} else {
+						// see "Invaled Password" error message
+						page.findElement(LoginPage.BY_CANCEL_LINK).click();
+					}
+				} catch (TimeoutException toe) {
+					loger.warn(toe.getMessage());
+					return false;
+				}
+				return false;
+			} else {
+				loger.warn("Required login before changing password");
+				return false;
+			}
 		}
+		return false;
 	}
 
 	/**
