@@ -12,7 +12,7 @@
 		<proxy>
 			<active>true</active>
 			<protocol>http</protocol>
-			<host>10.41.255.9</host>
+			<host>http-proxy-host</host>
 			<port>80</port>
 		</proxy>
 	</proxies>
