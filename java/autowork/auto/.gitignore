@@ -1,0 +1,20 @@
+# Eclipse project files 
+.project
+.classpath
+.settings
+/bin
+*/bin/
+
+# Build targets
+/target
+*/target/
+/build
+*/build/
+
+# Report directories
+/reports
+*/reports
+
+# JVM crash logs
+hs_err_pid*.log
+
