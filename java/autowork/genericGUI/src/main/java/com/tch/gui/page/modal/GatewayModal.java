@@ -83,10 +83,12 @@ public class GatewayModal extends Modal {
 	}
 
 	public String getFWVersion() {
+		String verLBLName = cpe.readProp("GUI.GW.verlbl");
+		if(null == verLBLName) verLBLName = "Firmware Version"; // base generic build
 		List<WebElement> ctl_group = page.findElements(BY_CTLS);
 		String fw_ver = "";
 		for (WebElement e : ctl_group) {
-			if (e.findElement(BY_CTL_LBL).getText().equals("Firmware Version")) {
+			if (e.findElement(BY_CTL_LBL).getText().equals(verLBLName)) {
 				fw_ver = e.findElement(BY_CTL_DESC).getText();
 				break;
 			}
