@@ -1,4 +1,4 @@
-package cn.zjp.web.auto.demos;
+package cn.zjp.web.demos;
 
 import java.io.File;
 import java.io.IOException;

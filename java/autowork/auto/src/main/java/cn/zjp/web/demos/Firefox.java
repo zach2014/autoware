@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cn.zjp.web.auto.demos;
+package cn.zjp.web.demos;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
