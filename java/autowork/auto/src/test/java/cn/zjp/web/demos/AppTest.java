@@ -1,4 +1,4 @@
-package cn.zjp.web;
+package cn.zjp.web.demos;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
