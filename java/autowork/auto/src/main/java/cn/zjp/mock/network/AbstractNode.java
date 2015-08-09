@@ -3,12 +3,8 @@
  */
 package cn.zjp.mock.network;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.pcap4j.core.BpfProgram.BpfCompileMode;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;
@@ -18,7 +14,6 @@ import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.TcpPacket;
-import org.pcap4j.util.NifSelector;
 
 /**
  * {@link AbstractNode is a helper class to simulate a network Node}
@@ -52,7 +47,7 @@ public abstract class AbstractNode {
 		 * setup network Node on the given {@code ifName} 
 		 * and send gratuitous ARP to announce itself
 		 * */
-		if(null != null && nif.isLocal()){
+		if(null != nif && nif.isLocal()){
 			try {
 				receiveHandle = nif.openLive(Integer.getInteger("", 65536), PromiscuousMode.PROMISCUOUS, 10);
 				receiveHandle.setFilter("tcp", BpfCompileMode.OPTIMIZE);
