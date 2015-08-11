@@ -9,11 +9,8 @@ package cn.zjp.mock.network;
  */
 public class SimpleV4Node extends AbstractNode {
 	
-	SimpleV4Node(){
-		//
-	}
-	public SimpleV4Node(String nifName, boolean dual){
-		super(nifName, dual);
+	public SimpleV4Node(String defRouter){
+		super(defRouter);
 	}
 	
 }

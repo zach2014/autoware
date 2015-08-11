@@ -19,7 +19,7 @@ public class SimpleV4NodeTest {
 
 	@Before
 	public void setUp() throws Exception {
-		nodeV4 = new SimpleV4Node("eth1", true);
+		nodeV4 = new SimpleV4Node("192.168.1.254");
 	}
 
 	@After
@@ -28,7 +28,8 @@ public class SimpleV4NodeTest {
 
 	@Test
 	public void test() {
-		nodeV4.onLink();
+		nodeV4.attach("eth1");
+		nodeV4.resolveRouter();
 	}
 
 }
