@@ -13,4 +13,12 @@ public class SimpleV4Node extends AbstractNode {
 		super(defRouter);
 	}
 	
+	public SimpleV4Node(String defRouter, String pseudoAddr){
+		super(defRouter, pseudoAddr);
+	}
+	
+	public SimpleV4Node(String defRouter, String pseudoAddr, String pseudoMac){
+		super(defRouter, pseudoAddr, pseudoMac);
+	}
+	
 }

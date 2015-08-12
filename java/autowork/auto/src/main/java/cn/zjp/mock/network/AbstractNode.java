@@ -3,6 +3,7 @@
  */
 package cn.zjp.mock.network;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
@@ -13,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.pcap4j.core.BpfProgram.BpfCompileMode;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PacketListener;
-import org.pcap4j.core.PcapAddress;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
@@ -21,12 +21,17 @@ import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
+import org.pcap4j.packet.IcmpV4EchoPacket;
+import org.pcap4j.packet.IcmpV4EchoReplyPacket;
+import org.pcap4j.packet.IpV4Packet;
+import org.pcap4j.packet.IpV4Packet.IpV4Tos;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.ArpHardwareType;
 import org.pcap4j.packet.namednumber.ArpOperation;
 import org.pcap4j.packet.namednumber.EtherType;
+import org.pcap4j.packet.namednumber.IpNumber;
+import org.pcap4j.packet.namednumber.IpVersion;
 import org.pcap4j.util.ByteArrays;
-import org.pcap4j.util.Inet4NetworkAddress;
 import org.pcap4j.util.MacAddress;
 
 /**
@@ -35,7 +40,17 @@ import org.pcap4j.util.MacAddress;
  */
 public abstract class AbstractNode {
 	
+	public static final int SNAPLEN_MIN = 86;
+	public static final int SNAPLEN_MAX = 64 * 1024;
+	public static final int RETRY = 3;
+	public static final int INTRVL_MIN = 10; // 10 mill
+	public static final int INTRVL_MAX = 1000; // 1000 mill 
+	public static final int ZERO_INDEX = 0;
+	
 	private static final Logger loger = LogManager.getLogger(AbstractNode.class.getName());
+	private static short ICMP_ECHO_ID = 0;
+	private static short ICMP_ECHO_SEQ = 0;
+	
 	private ExecutorService pcapPool  = Executors.newSingleThreadExecutor();
 	protected InetAddress host;
 	protected MacAddress routerMac;
@@ -66,42 +81,38 @@ public abstract class AbstractNode {
 		}
 	}
 	
+	AbstractNode(String defRouter, String pseudoAddr, String pseudoMac){
+		this(defRouter, pseudoAddr);
+		this.hwAddress = MacAddress.getByName(pseudoMac);
+	}
+	
 	public String hostName(){
 		if(null == host){
 			// TODO select the address with same subnet as router
-			return attachNif.getAddresses().get(0).toString();
+			loger.warn("Not set \'host\', try to get ip addr from attached interface");
+			return attachNif.getAddresses().get(ZERO_INDEX).toString();
 		}
 		return host.toString();
 	}
 	
-	public InetAddress localAddress(){
+	public InetAddress getLocalAddr(){
 		if (null == host){
-			return attachNif.getAddresses().get(0).getAddress();
+			loger.warn("Not set \'host\', try to get ip addr from attached interface");
+			return attachNif.getAddresses().get(ZERO_INDEX).getAddress();
 		}
 		return host;
 	}
 	
-	public MacAddress hwAddress(){
+	public MacAddress getLocalMac(){
 		if (null == hwAddress){
-			return MacAddress.getByAddress(attachNif.getLinkLayerAddresses().get(0).getAddress());
+			return MacAddress.getByAddress(attachNif.getLinkLayerAddresses().get(ZERO_INDEX).getAddress());
 		}
 		return hwAddress;
 	}
 	
-	public String router(){
+	public String getNextHop(){
 		if(null == router) return InetAddress.getLoopbackAddress().getHostAddress();
 		return router.getHostAddress();
-	}
-	
-	public void setNif(PcapNetworkInterface nif){
-		if(null != nif){
-			this.attachNif = nif;
-		}else {
-			throw new IllegalStateException("Null parameter"); 
-		}
-	}
-	
-	public void arpRequest(InetAddress ipAddr){
 	}
 	
 	/**
@@ -116,24 +127,104 @@ public abstract class AbstractNode {
 		try {
 			attachNif = Pcaps.getDevByName(ifName);
 			if(null == attachNif ){
-				throw new IllegalStateException("Not found interface named: " + ifName);
+				throw new IllegalStateException("Not found interface: " + ifName);
 			} else {
-				doDAD(localAddress(), 3, 500);
+				doDAD(getLocalAddr(), RETRY, INTRVL_MAX);
 			}
 		} catch (PcapNativeException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void resolveRouter(){
+	public void resolveNextHop(){
 		routerMac = arpResolve(router);
+		if(loger.isDebugEnabled()){
+			loger.debug("RouterMac:" + routerMac.toString());
+		}
 	}
 	
+	public void echoNextHop() {
+		echoRequest(this.router);
+	}
+	
+	public boolean echoRequest(InetAddress target){
+		try {
+			PcapHandle rhandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, INTRVL_MIN);
+			PcapHandle shandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, INTRVL_MIN);
+			rhandle.setFilter("icmp and src host " + target.getHostAddress() + " and dst host " + this.getLocalAddr().getHostAddress(), BpfCompileMode.OPTIMIZE);
+			
+			PacketListener echoListener = new PacketListener(){
+				@Override
+				public void gotPacket(Packet packet) {
+					if(packet.contains(IcmpV4EchoReplyPacket.class)){
+						IcmpV4EchoReplyPacket echoReply = packet.get(IcmpV4EchoReplyPacket.class);
+						if(null != echoReply){
+							loger.info("Receive echoReply");
+						}
+					}
+				}	
+			};
+			
+			PcapDump capture = new PcapDump(rhandle, echoListener);
+			pcapPool.execute(capture);
+			ICMP_ECHO_ID++;
+			ICMP_ECHO_SEQ++;
+			Packet echoReq = genEchoReq(target, ICMP_ECHO_ID, ICMP_ECHO_SEQ);
+			shandle.sendPacket(echoReq);
+		} catch (PcapNativeException e) {
+			e.printStackTrace();
+		} catch (NotOpenException e) {
+			e.printStackTrace();
+		}
+		
+		
+		return false;
+		
+	}
+	
+	private Packet genEchoReq(InetAddress target, short identifier, short seq) {
+		IcmpV4EchoPacket.Builder icmpV4Builder = new IcmpV4EchoPacket.Builder();
+		icmpV4Builder.identifier(identifier)
+		.sequenceNumber(seq);
+		
+		IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
+		IpV4Tos tos = new IpV4Tos() {
+			private static final long serialVersionUID = 7709932961444865676L;
+
+			@Override
+			public byte value() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+		};
+		ipV4Builder
+		.version(IpVersion.IPV4)
+		.tos(tos)
+		.protocol(IpNumber.ICMPV4)
+		.srcAddr((Inet4Address) getLocalAddr())
+		.dstAddr((Inet4Address) target)
+		.payloadBuilder(icmpV4Builder)
+		.correctChecksumAtBuild(true)
+		.correctLengthAtBuild(true);
+		
+		EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
+		etherBuilder.dstAddr(arpResolve(target))
+		.srcAddr(getLocalMac())
+		.type(EtherType.IPV4)
+		.payloadBuilder(ipV4Builder)
+		.paddingAtBuild(true);
+		
+		return etherBuilder.build();
+	}
+
 	public MacAddress arpResolve(InetAddress target) {
 		try {
-			PcapHandle rhandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, 10);
-			PcapHandle shandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, 10);
-			rhandle.setFilter("arp", BpfCompileMode.OPTIMIZE);
+			PcapHandle rhandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, INTRVL_MIN);
+			PcapHandle shandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, INTRVL_MIN);
+			rhandle.setFilter("arp and src host " + target.getHostAddress() 
+			+ " and dst host " + host.getHostAddress() 
+			+ " and ether dst " + hwAddress.toString(), 
+			BpfCompileMode.OPTIMIZE);
 			
 			PacketListener arpListener = new PacketListener(){
 
@@ -150,23 +241,20 @@ public abstract class AbstractNode {
 			};
 			
 			PcapDump capture = new PcapDump(rhandle, arpListener);
-			capture.run();
-			Packet arpReq = genARPRequest(router, host, hwAddress);
+			pcapPool.execute(capture);
+			Packet arpReq = genARPRequest(router, getLocalAddr(), getLocalMac());
 			for(int i = 0; i < 3; i++){
 				shandle.sendPacket(arpReq);
 				Thread.sleep(1000);
 			}
-			
+			shandle.close();
 		} catch (PcapNativeException e) {
 			e.printStackTrace();
 		} catch (NotOpenException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		} finally {
-			
 		}
-		
 		return resolvedMac;
 	}
 
@@ -191,13 +279,14 @@ public abstract class AbstractNode {
 	}
 	
 	protected Packet genGratuitousARP(InetAddress target){
-		return genARPRequest(target, localAddress(), hwAddress());
+		return genARPRequest(target, getLocalAddr(), getLocalMac());
 	}
 	
 	protected Packet genARPRequest(InetAddress target, InetAddress srcIp, MacAddress srcMac) {
 		ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
 		
-		arpBuilder.dstProtocolAddr(target)
+		arpBuilder
+		.dstProtocolAddr(target)
 		.dstHardwareAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
 		.srcProtocolAddr(srcIp)
 		.srcHardwareAddr(srcMac)
