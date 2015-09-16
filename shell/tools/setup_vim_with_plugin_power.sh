@@ -34,7 +34,7 @@ echo "#######################################################"
 sudo apt-get -y install exuberant-ctags
 git clone https://github.com/majutsushi/tagbar $HOME/.vim/bundle/tagbar
 
-PROXY="http://10.41.255.9:80"
+PROXY=$http_proxy
 which pip || sudo apt-get -y install python-pip || echo "fail to install python-pip"
 
 echo "#######################################################"
