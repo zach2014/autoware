@@ -1,0 +1,14 @@
+#!/bin/bash
+if ! which curl ; then 
+    echo "no curl"
+else
+    echo "had curl"
+fi
+
+[ -f ~/.vimrc ] || echo "not found vimrc"
+ which pip  || echo "no pip installed"
+if $(vim --version|grep -q +python) ; then 
+	echo "ultisnips will be installed with vim"
+else
+	echo "ultisnips does NOT install for without python support in vim"
+fi
