@@ -12,3 +12,12 @@ if $(vim --version|grep -q +python) ; then
 else
 	echo "ultisnips does NOT install for without python support in vim"
 fi
+echo "write multi lines to a file: /tmp/multi-line.test"
+echo  "
+line1
+line2" >> /tmp/multi-line.test
+
+cat <<EOF >> /tmp/multi-line.test
+line3
+line4
+EOF

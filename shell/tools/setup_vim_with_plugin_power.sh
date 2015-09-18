@@ -78,6 +78,22 @@ echo "#######################################################"
 git clone https://github.com/Raimondi/delimitMate.git $HOME/.vim/bundle/delimitMate
 
 echo "#######################################################"
+echo "Go(golang) support for vim"
+echo "#######################################################"
+git clone https://github.com/fatih/vim-go.git $HOME/.vim/bundle/vim-go
+cat <<EOT >> $HOME/.vimrc
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_build_constraints = 1
+let g:go_fmt_command = "goimports"
+let g:go_fmt_fail_silently = 1
+let g:go_fmt_autosave = 0
+let g:go_play_open_browser = 0
+EOT
+
+echo "#######################################################"
 echo "it is great to install vim with his bundle!"
 echo "try with 'vim test.py', 'vim test.sh' and 'test.java'"
 echo "#######################################################"
