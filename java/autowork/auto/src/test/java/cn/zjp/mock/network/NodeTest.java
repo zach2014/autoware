@@ -8,15 +8,18 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class SimpleV4NodeTest {
-	private SimpleV4Node nodeV4;
+public class NodeTest {
+	private static Node theNode;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		theNode = new Node("wlan0");
 	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
+		Thread.sleep(300000);
+		theNode.shutdown();
 	}
 
 	@Before
@@ -28,8 +31,14 @@ public class SimpleV4NodeTest {
 	}
 
 	@Test
-	public void test() {
-		fail("Not yet implement");
+	public void testInitNode() {
+		assertNotNull(theNode.getPcapNif());
+	}
+	
+	@Test
+	public void testStartNode(){
+		theNode.start();
+		assertTrue(theNode.isCapturing());
 	}
 
 }

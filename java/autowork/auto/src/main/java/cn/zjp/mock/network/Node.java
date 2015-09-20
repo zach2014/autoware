@@ -3,15 +3,13 @@
  */
 package cn.zjp.mock.network;
 
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.pcap4j.core.BpfProgram.BpfCompileMode;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
@@ -21,265 +19,179 @@ import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
-import org.pcap4j.packet.IcmpV4EchoPacket;
-import org.pcap4j.packet.IcmpV4EchoReplyPacket;
-import org.pcap4j.packet.IpV4Packet;
-import org.pcap4j.packet.IpV4Packet.IpV4Tos;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.ArpHardwareType;
 import org.pcap4j.packet.namednumber.ArpOperation;
 import org.pcap4j.packet.namednumber.EtherType;
-import org.pcap4j.packet.namednumber.IpNumber;
-import org.pcap4j.packet.namednumber.IpVersion;
 import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
 
 /**
- * {@link AbstractNode is a helper class to simulate a network Node}
+ * {@link Node} capturing packets on the network interface of {@code dev}
  * 
  */
-public abstract class AbstractNode {
+public class Node implements Simulatable {
+		
+	private static final Logger loger = LogManager.getLogger(Node.class.getName());
+
+	private static final int CAP_TIME_OUT = 10;
+
+	private static final long NODE_SHUTDOWN_TIMEOUT = 1;
 	
-	public static final int SNAPLEN_MIN = 86;
-	public static final int SNAPLEN_MAX = 64 * 1024;
-	public static final int RETRY = 3;
-	public static final int INTRVL_MIN = 10; // 10 mill
-	public static final int INTRVL_MAX = 1000; // 1000 mill 
-	public static final int ZERO_INDEX = 0;
+	private final String dev;
+	private final PcapNetworkInterface pcapNif;
+	private PcapHandle captureHandler;
+	private PcapHandle sendHandler;
+	private ExecutorService capExecutor;
+	private PacketListener packetListener = new AllPacketListener();
+	private final Object lock = new Object();
 	
-	private static final Logger loger = LogManager.getLogger(AbstractNode.class.getName());
-	private static short ICMP_ECHO_ID = 0;
-	private static short ICMP_ECHO_SEQ = 0;
+	private boolean capturing;
 	
-	private ExecutorService pcapPool  = Executors.newSingleThreadExecutor();
-	protected InetAddress host;
-	protected MacAddress routerMac;
-	protected InetAddress router;
-	protected static MacAddress resolvedMac=MacAddress.getByName("00:00:00:00:00:00");
-	protected volatile PcapNetworkInterface attachNif = null; // the attached physical port for pcap
-	protected MacAddress hwAddress;
-	
-	
-	AbstractNode(){
-		//only allow extending from same package
-	}
-	
-	AbstractNode(String defRouter){
+	@SuppressWarnings("null")
+	Node(String dev){
+		if(dev == null) {
+			throw new NullPointerException("dev: " + dev.toString());
+		}
+		this.dev = dev;
+		
+		PcapNetworkInterface  pnif = null;
 		try {
-			router = InetAddress.getByName(defRouter);
-		} catch (UnknownHostException e1){
-			e1.printStackTrace();
-		}
-	}
-	
-	AbstractNode(String defRouter, String pseudoAddress){
-		this(defRouter);
-		try {
-			this.host = InetAddress.getByName(pseudoAddress);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	AbstractNode(String defRouter, String pseudoAddr, String pseudoMac){
-		this(defRouter, pseudoAddr);
-		this.hwAddress = MacAddress.getByName(pseudoMac);
-	}
-	
-	public String hostName(){
-		if(null == host){
-			// TODO select the address with same subnet as router
-			loger.warn("Not set \'host\', try to get ip addr from attached interface");
-			return attachNif.getAddresses().get(ZERO_INDEX).toString();
-		}
-		return host.toString();
-	}
-	
-	public InetAddress getLocalAddr(){
-		if (null == host){
-			loger.warn("Not set \'host\', try to get ip addr from attached interface");
-			return attachNif.getAddresses().get(ZERO_INDEX).getAddress();
-		}
-		return host;
-	}
-	
-	public MacAddress getLocalMac(){
-		if (null == hwAddress){
-			return MacAddress.getByAddress(attachNif.getLinkLayerAddresses().get(ZERO_INDEX).getAddress());
-		}
-		return hwAddress;
-	}
-	
-	public String getNextHop(){
-		if(null == router) return InetAddress.getLoopbackAddress().getHostAddress();
-		return router.getHostAddress();
-	}
-	
-	/**
-	 * setup {@link PcapNetworkInterface} according to the {@code ifName}, 
-	 * and send gratuitous ARP to announce itself
-	 * and ARP resolve for {@code router}
-	 */
-	public void attach(String ifName){
-		if(null == ifName){
-			throw new IllegalStateException("Invalid parameter");
-		}
-		try {
-			attachNif = Pcaps.getDevByName(ifName);
-			if(null == attachNif ){
-				throw new IllegalStateException("Not found interface: " + ifName);
-			} else {
-				doDAD(getLocalAddr(), RETRY, INTRVL_MAX);
-			}
+			pnif = Pcaps.getDevByName(dev);
 		} catch (PcapNativeException e) {
-			e.printStackTrace();
+			throw new IllegalStateException(e);
 		}
-	}
-	
-	public void resolveNextHop(){
-		routerMac = arpResolve(router);
-		if(loger.isDebugEnabled()){
-			loger.debug("RouterMac:" + routerMac.toString());
+		if(pnif == null){
+			throw new IllegalStateException("NO NIF was found, may no dev named \'" 
+					+ dev 
+					+ "\' or not be granted capabilities to java by superuser");
 		}
-	}
-	
-	public void echoNextHop() {
-		echoRequest(this.router);
-	}
-	
-	public boolean echoRequest(InetAddress target){
+		this.pcapNif = pnif;
 		try {
-			PcapHandle rhandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, INTRVL_MIN);
-			PcapHandle shandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, INTRVL_MIN);
-			rhandle.setFilter("icmp and src host " + target.getHostAddress() + " and dst host " + this.getLocalAddr().getHostAddress(), BpfCompileMode.OPTIMIZE);
-			
-			PacketListener echoListener = new PacketListener(){
-				@Override
-				public void gotPacket(Packet packet) {
-					if(packet.contains(IcmpV4EchoReplyPacket.class)){
-						IcmpV4EchoReplyPacket echoReply = packet.get(IcmpV4EchoReplyPacket.class);
-						if(null != echoReply){
-							loger.info("Receive echoReply");
-						}
-					}
-				}	
-			};
-			
-			PcapDump capture = new PcapDump(rhandle, echoListener);
-			pcapPool.execute(capture);
-			ICMP_ECHO_ID++;
-			ICMP_ECHO_SEQ++;
-			Packet echoReq = genEchoReq(target, ICMP_ECHO_ID, ICMP_ECHO_SEQ);
-			shandle.sendPacket(echoReq);
+			captureHandler = pcapNif.openLive(0, PromiscuousMode.PROMISCUOUS, CAP_TIME_OUT);
+			sendHandler = pcapNif.openLive(0, PromiscuousMode.PROMISCUOUS, CAP_TIME_OUT);
+		} catch (PcapNativeException e) {
+			throw new IllegalStateException(e);
+		}
+		this.capExecutor = Executors.newSingleThreadExecutor();
+		
+		loger.info("Node setup on interface: \'"  + dev + "\'");
+	}
+	
+	public String getDev(){
+		return dev;
+	}
+	
+	public PcapNetworkInterface getPcapNif(){
+		return pcapNif;
+	}
+
+	@Override
+	public void start() {
+		synchronized (lock) { // synchronized for capturing packets
+			if(capturing){
+				loger.info("Aready capuring");
+				return;
+			}
+			capExecutor.execute(new CaptureDump());
+			capturing = true;
+		}
+		loger.info("Start to capture.");
+	}
+
+	@Override
+	public void stop() {
+		synchronized (lock) { // synchronized to break the loop of capturing down
+			if (!capturing) {
+				loger.info("Aready stoped, not capturing.");
+				return;
+			}
+			try {
+				captureHandler.breakLoop();
+			} catch (NotOpenException e) {
+				e.printStackTrace();
+			}
+			capturing = false;
+		}
+		loger.info("Stop to capture.");
+	}
+
+	@Override
+	public void sendPacket(Packet packet) {
+		if(sendHandler == null  || ! sendHandler.isOpen()){
+			throw new IllegalStateException("send handle: " + sendHandler + "cannot work.");
+		}
+		try {
+			sendHandler.sendPacket(packet);
 		} catch (PcapNativeException e) {
 			e.printStackTrace();
 		} catch (NotOpenException e) {
 			e.printStackTrace();
 		}
-		
-		
-		return false;
+		loger.info("send: -->\n" + packet);
+	}
+
+	@Override
+	public void AddListener(PacketListener listener) {
+		this.packetListener = listener;	
+	}
+	
+	@Override
+	public boolean isCapturing() {
+		return capturing;
+	}
+	
+	@Override
+	public void shutdown(){
+		synchronized (lock) {
+			if (capturing) {
+				stop();
+			}
+			capExecutor.shutdown();
+			try {
+				if (!capExecutor.awaitTermination(NODE_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+					loger.warn("Shutdown timeout.");
+				}
+			} catch (InterruptedException e) {
+				loger.error(e);
+			}
+			captureHandler.close();
+			sendHandler.close();
+		}
+		loger.info("Node has been shutdown.");
+	}
+	
+	private class CaptureDump implements Runnable {
+
+		@Override
+		public void run() {
+			if(captureHandler == null || !captureHandler.isOpen()){
+				throw new IllegalStateException("capture handle: " + captureHandler + "cannot work.");
+			}
+			
+			try {
+				captureHandler.loop(-1, packetListener);
+			} catch (PcapNativeException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (NotOpenException e) {
+				e.printStackTrace();
+			}
+			loger.info("Stoped capture.");
+		}
 		
 	}
 	
-	private Packet genEchoReq(InetAddress target, short identifier, short seq) {
-		IcmpV4EchoPacket.Builder icmpV4Builder = new IcmpV4EchoPacket.Builder();
-		icmpV4Builder.identifier(identifier)
-		.sequenceNumber(seq);
-		
-		IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
-		IpV4Tos tos = new IpV4Tos() {
-			private static final long serialVersionUID = 7709932961444865676L;
+	private class AllPacketListener implements PacketListener {
 
-			@Override
-			public byte value() {
-				// TODO Auto-generated method stub
-				return 0;
+		@Override
+		public void gotPacket(Packet packet) {
+			if(loger.isDebugEnabled()){
+				loger.debug("recv: <--\n"  + packet);
 			}
-		};
-		ipV4Builder
-		.version(IpVersion.IPV4)
-		.tos(tos)
-		.protocol(IpNumber.ICMPV4)
-		.srcAddr((Inet4Address) getLocalAddr())
-		.dstAddr((Inet4Address) target)
-		.payloadBuilder(icmpV4Builder)
-		.correctChecksumAtBuild(true)
-		.correctLengthAtBuild(true);
-		
-		EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
-		etherBuilder.dstAddr(arpResolve(target))
-		.srcAddr(getLocalMac())
-		.type(EtherType.IPV4)
-		.payloadBuilder(ipV4Builder)
-		.paddingAtBuild(true);
-		
-		return etherBuilder.build();
-	}
-
-	public MacAddress arpResolve(InetAddress target) {
-		try {
-			PcapHandle rhandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, INTRVL_MIN);
-			PcapHandle shandle = attachNif.openLive(86, PromiscuousMode.PROMISCUOUS, INTRVL_MIN);
-			rhandle.setFilter("arp and src host " + target.getHostAddress() 
-			+ " and dst host " + host.getHostAddress() 
-			+ " and ether dst " + hwAddress.toString(), 
-			BpfCompileMode.OPTIMIZE);
-			
-			PacketListener arpListener = new PacketListener(){
-
-				@Override
-				public void gotPacket(Packet packet) {
-					if(packet.contains(ArpPacket.class)){
-						ArpPacket arp = packet.get(ArpPacket.class);
-						ArpPacket.ArpHeader header = arp.getHeader();
-						if(header.getOperation().equals(ArpOperation.REPLY)){
-							resolvedMac = arp.getHeader().getSrcHardwareAddr();
-						}
-					}
-				}	
-			};
-			
-			PcapDump capture = new PcapDump(rhandle, arpListener);
-			pcapPool.execute(capture);
-			Packet arpReq = genARPRequest(router, getLocalAddr(), getLocalMac());
-			for(int i = 0; i < 3; i++){
-				shandle.sendPacket(arpReq);
-				Thread.sleep(1000);
-			}
-			shandle.close();
-		} catch (PcapNativeException e) {
-			e.printStackTrace();
-		} catch (NotOpenException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+			return;
 		}
-		return resolvedMac;
-	}
-
-	private void doDAD(InetAddress target, int retry, int interval){
-		Packet packet = genGratuitousARP(target);
-		if(null == packet) {
-			throw new IllegalStateException("Null packet");
-		}
-		try {
-			PcapHandle transmit = attachNif.openLive(0, PromiscuousMode.PROMISCUOUS, 10);
-			for (int i = 0; i < retry; i++) {
-				transmit.sendPacket(packet);
-				Thread.sleep(interval);
-			}
-		} catch (PcapNativeException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (NotOpenException e) {
-			e.printStackTrace();
-		} 
-	}
-	
-	protected Packet genGratuitousARP(InetAddress target){
-		return genARPRequest(target, getLocalAddr(), getLocalMac());
 	}
 	
 	protected Packet genARPRequest(InetAddress target, InetAddress srcIp, MacAddress srcMac) {
