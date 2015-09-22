@@ -31,7 +31,7 @@ import org.pcap4j.util.MacAddress;
  * {@link Node} capturing packets on the network interface of {@code dev}
  * 
  */
-public class Node implements Simulatable {
+public class Node implements ListenOn {
 		
 	private static final int SNAPLEN_MAX = 65535;
 
@@ -145,7 +145,6 @@ public class Node implements Simulatable {
 		loger.info("Stop to capture.");
 	}
 
-	@Override
 	public void sendPacket(Packet packet) {
 		try {
 			if (sendHandler == null || !sendHandler.isOpen()) {
@@ -170,7 +169,6 @@ public class Node implements Simulatable {
 		return capturing;
 	}
 	
-	@Override
 	public void shutdown(){
 		synchronized (lock) {
 			if (capturing) {
