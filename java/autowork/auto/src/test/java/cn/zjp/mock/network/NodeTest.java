@@ -7,18 +7,22 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.pcap4j.util.MacAddress;
 
 public class NodeTest {
 	private static Node theNode;
+	private static MacAddress mac = MacAddress.getByName("d0:67:e5:33:91:00");
+	public static ExpectedException rule = ExpectedException.none();
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		theNode = new Node("wlan0");
+		rule.expect(InterruptedException.class);
+		theNode = new Node("eth0", mac);
 	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		Thread.sleep(300000);
 		theNode.shutdown();
 	}
 
@@ -36,8 +40,9 @@ public class NodeTest {
 	}
 	
 	@Test
-	public void testStartNode(){
+	public void testStartNode() throws InterruptedException{
 		theNode.start();
+		Thread.sleep(10000); // wait 10 seconds for doing capture
 		assertTrue(theNode.isCapturing());
 	}
 

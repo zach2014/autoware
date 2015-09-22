@@ -17,6 +17,7 @@ import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.core.Pcaps;
+import org.pcap4j.core.BpfProgram.BpfCompileMode;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.Packet;
@@ -32,28 +33,36 @@ import org.pcap4j.util.MacAddress;
  */
 public class Node implements Simulatable {
 		
+	private static final int SNAPLEN_MAX = 65535;
+
 	private static final Logger loger = LogManager.getLogger(Node.class.getName());
 
 	private static final int CAP_TIME_OUT = 10;
 
 	private static final long NODE_SHUTDOWN_TIMEOUT = 1;
 	
+	// the 3 fields dev, pcapNif, hwAddr should not be change after constructed
 	private final String dev;
 	private final PcapNetworkInterface pcapNif;
+	private final MacAddress hwAddr;
 	private PcapHandle captureHandler;
 	private PcapHandle sendHandler;
 	private ExecutorService capExecutor;
-	private PacketListener packetListener = new AllPacketListener();
+	private PacketListener packetListener = null;
 	private final Object lock = new Object();
 	
 	private boolean capturing;
 	
-	@SuppressWarnings("null")
-	Node(String dev){
-		if(dev == null) {
-			throw new NullPointerException("dev: " + dev.toString());
+	Node(String dev, MacAddress pseudoMAC){
+		if(dev == null ||
+				pseudoMAC == null ) {
+			StringBuilder msg = new StringBuilder();
+			msg.append("dev: " + dev)
+			.append("pseudoMAC: " + pseudoMAC.toString());
+			throw new NullPointerException(msg.toString());
 		}
 		this.dev = dev;
+		this.hwAddr = pseudoMAC;
 		
 		PcapNetworkInterface  pnif = null;
 		try {
@@ -66,20 +75,16 @@ public class Node implements Simulatable {
 					+ dev 
 					+ "\' or not be granted capabilities to java by superuser");
 		}
-		this.pcapNif = pnif;
-		try {
-			captureHandler = pcapNif.openLive(0, PromiscuousMode.PROMISCUOUS, CAP_TIME_OUT);
-			sendHandler = pcapNif.openLive(0, PromiscuousMode.PROMISCUOUS, CAP_TIME_OUT);
-		} catch (PcapNativeException e) {
-			throw new IllegalStateException(e);
-		}
-		this.capExecutor = Executors.newSingleThreadExecutor();
-		
+		this.pcapNif = pnif;		
 		loger.info("Node setup on interface: \'"  + dev + "\'");
 	}
 	
 	public String getDev(){
 		return dev;
+	}
+	
+	public MacAddress getHwAddr(){
+		return hwAddr;
 	}
 	
 	public PcapNetworkInterface getPcapNif(){
@@ -93,7 +98,31 @@ public class Node implements Simulatable {
 				loger.info("Aready capuring");
 				return;
 			}
-			capExecutor.execute(new CaptureDump());
+			try {
+				if(captureHandler == null || ! captureHandler.isOpen()){
+					captureHandler = pcapNif.openLive(SNAPLEN_MAX, PromiscuousMode.PROMISCUOUS, CAP_TIME_OUT);
+					// setup a generic pcap_filter for Ethernet 
+					StringBuilder gfilter_exp = new StringBuilder();
+					gfilter_exp
+					.append("(")
+					.append("ether dst ")
+					.append(Pcaps.toBpfString(hwAddr))
+					.append(")")
+					.append(" or ")
+					.append("(")
+					.append("arp and ether dst ")
+					.append(Pcaps.toBpfString(MacAddress.ETHER_BROADCAST_ADDRESS))
+					.append(")");
+					captureHandler.setFilter(gfilter_exp.toString(), BpfCompileMode.OPTIMIZE);
+				}
+			} catch (PcapNativeException e) {
+				throw new IllegalStateException(e);
+			} catch (NotOpenException e) {
+				throw new IllegalStateException("Never to here.");
+			}
+			
+			this.capExecutor = Executors.newSingleThreadExecutor();
+			capExecutor.execute(new CaptureLooper());
 			capturing = true;
 		}
 		loger.info("Start to capture.");
@@ -118,21 +147,21 @@ public class Node implements Simulatable {
 
 	@Override
 	public void sendPacket(Packet packet) {
-		if(sendHandler == null  || ! sendHandler.isOpen()){
-			throw new IllegalStateException("send handle: " + sendHandler + "cannot work.");
-		}
 		try {
+			if (sendHandler == null || !sendHandler.isOpen()) {
+				sendHandler = pcapNif.openLive(SNAPLEN_MAX, PromiscuousMode.PROMISCUOUS, CAP_TIME_OUT);
+			}
 			sendHandler.sendPacket(packet);
 		} catch (PcapNativeException e) {
 			e.printStackTrace();
 		} catch (NotOpenException e) {
 			e.printStackTrace();
 		}
-		loger.info("send: -->\n" + packet);
+		loger.info("SEND: -->\n" + packet);
 	}
 
 	@Override
-	public void AddListener(PacketListener listener) {
+	public void setListener(PacketListener listener) {
 		this.packetListener = listener;	
 	}
 	
@@ -155,13 +184,13 @@ public class Node implements Simulatable {
 			} catch (InterruptedException e) {
 				loger.error(e);
 			}
-			captureHandler.close();
-			sendHandler.close();
+			if(null != captureHandler && captureHandler.isOpen()) captureHandler.close();
+			if(null != sendHandler && sendHandler.isOpen()) sendHandler.close();
 		}
 		loger.info("Node has been shutdown.");
 	}
 	
-	private class CaptureDump implements Runnable {
+	private class CaptureLooper implements Runnable {
 
 		@Override
 		public void run() {
@@ -170,7 +199,7 @@ public class Node implements Simulatable {
 			}
 			
 			try {
-				captureHandler.loop(-1, packetListener);
+				captureHandler.loop(-1, new PacketEntry());
 			} catch (PcapNativeException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
@@ -183,13 +212,14 @@ public class Node implements Simulatable {
 		
 	}
 	
-	private class AllPacketListener implements PacketListener {
+	private class PacketEntry implements PacketListener {
 
 		@Override
 		public void gotPacket(Packet packet) {
 			if(loger.isDebugEnabled()){
-				loger.debug("recv: <--\n"  + packet);
+				loger.debug("RECV: <--\n"  + packet);
 			}
+			if (null != packetListener) packetListener.gotPacket(packet);
 			return;
 		}
 	}
