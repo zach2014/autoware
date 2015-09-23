@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.pcap4j.util.MacAddress;
 
-public class NodeTest {
+public class EthernetHostTest {
 	private static Node theNode;
 	private static MacAddress mac = MacAddress.getByName("d0:67:e5:33:91:00");
 	public static ExpectedException rule = ExpectedException.none();
@@ -18,7 +18,7 @@ public class NodeTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		rule.expect(InterruptedException.class);
-		theNode = new Node("eth0", mac);
+		theNode = new EthernetHost("eth0", mac);
 	}
 
 	@AfterClass
