@@ -36,7 +36,8 @@ public abstract class Node implements ListenOn {
 	protected static final int SNAPLEN_MAX = 65535;
 	protected static final int CAP_TIME_OUT = 10;
 
-	private static final long NODE_SHUTDOWN_TIMEOUT = 1;
+	private static final long NODE_SHUTDOWN_TIMEOUT = 3000;
+	private static final TimeUnit TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 	
 	// the 3 fields dev, pcapNif, hwAddr should not be change after constructed
 	private final String dev;
@@ -112,7 +113,7 @@ public abstract class Node implements ListenOn {
 			e.printStackTrace();
 		}
 		if(loger.isDebugEnabled()){
-			loger.info("SEND: -->\n" + packet);
+			loger.debug("SEND: -->\n" + packet);
 		}
 	}
 
@@ -133,7 +134,7 @@ public abstract class Node implements ListenOn {
 			}
 			capExecutor.shutdown();
 			try {
-				if (!capExecutor.awaitTermination(NODE_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+				if (!capExecutor.awaitTermination(NODE_SHUTDOWN_TIMEOUT, TIMEOUT_UNIT)) {
 					loger.warn("Shutdown timeout.");
 				}
 			} catch (InterruptedException e) {

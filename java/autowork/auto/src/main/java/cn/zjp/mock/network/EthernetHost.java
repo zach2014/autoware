@@ -28,6 +28,10 @@ public class EthernetHost extends Node {
 		this.hwAddr = pseudoMAC;
 	}
 	
+	public MacAddress getMac() {
+		return hwAddr;
+	}
+	
 	@Override
 	public void start() {
 		synchronized (lock) { // synchronized for capturing packets
@@ -39,18 +43,25 @@ public class EthernetHost extends Node {
 				if(captureHandler == null || ! captureHandler.isOpen()){
 					captureHandler = pcapNif.openLive(SNAPLEN_MAX, PromiscuousMode.PROMISCUOUS, CAP_TIME_OUT);
 					// setup a generic pcap_filter for Ethernet 
-					StringBuilder gfilter_exp = new StringBuilder();
-					gfilter_exp
+					StringBuilder filter_exp_eth = new StringBuilder();
+					filter_exp_eth
+					// packets to itself
 					.append("(")
 					.append("ether dst ")
 					.append(Pcaps.toBpfString(hwAddr))
 					.append(")")
 					.append(" or ")
+					// packets for ARP request
 					.append("(")
-					.append("arp and ether dst ")
-					.append(Pcaps.toBpfString(MacAddress.ETHER_BROADCAST_ADDRESS))
+					.append("arp and ether broadcast ")
+					.append(")")
+					.append(" or ")
+					// Ethernet multicast
+					.append("(")
+					.append("ether multicast")
 					.append(")");
-					captureHandler.setFilter(gfilter_exp.toString(), BpfCompileMode.OPTIMIZE);
+					if(loger.isDebugEnabled()) loger.debug("Filter expression for EthernetHost: " + filter_exp_eth.toString() );
+					captureHandler.setFilter(filter_exp_eth.toString(), BpfCompileMode.OPTIMIZE);
 				}
 			} catch (PcapNativeException e) {
 				throw new IllegalStateException(e);
@@ -75,7 +86,7 @@ public class EthernetHost extends Node {
 			}
 			
 			try {
-				captureHandler.loop(-1, new PacketEntry());
+				captureHandler.loop(-1, new EthernetPacketEntry());
 			} catch (PcapNativeException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
@@ -88,14 +99,14 @@ public class EthernetHost extends Node {
 		
 	}
 	
-	private class PacketEntry implements PacketListener {
+	private class EthernetPacketEntry implements PacketListener {
 
 		@Override
 		public void gotPacket(Packet packet) {
 			if(loger.isDebugEnabled()){
 				loger.debug("RECV: <--\n"  + packet);
 			}
-			// all Ethernet packets come to here
+			// the allowed Ethernet packets come to here
 			if (null != packetListener) packetListener.gotPacket(packet);
 			return;
 		}
