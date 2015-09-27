@@ -4,6 +4,15 @@
 # to install vim on ubuntu14.04 with effective plugins
 #
 # set -xe 
+if [ "-h" == "$!" ] ; then 
+{
+    echo "Usage: $0 [Author] [Contact]"
+    exit 1 
+}
+fi
+AUTHOR=$1
+EMAIL=$2
+
 echo "Starting to intall vim for your favarite editor"
 sduo apt-get update && sudo apt-get -y upgrade 
 sudo apt-get -y install vim
@@ -47,7 +56,11 @@ echo "#######################################################"
 echo "vim-template is teh bundle as well"
 echo "#######################################################"
 git clone https://github.com/aperezdc/vim-template.git $HOME/.vim/bundle/vim-template
-
+cat <<EOT >> $HOME/.vimrc  
+let g:email= "$EMAIL"
+let g:user = "$AUTHOR"
+let g:license = "MIT"
+EOT
 #
 # According to http://www.lucianofiandesio.com/vim-configuration-for-happy-java-coding
 # add some plugins for java code
