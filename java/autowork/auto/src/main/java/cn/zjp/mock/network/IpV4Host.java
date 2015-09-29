@@ -13,7 +13,6 @@ import org.pcap4j.packet.IcmpV4CommonPacket;
 import org.pcap4j.packet.IcmpV4EchoPacket;
 import org.pcap4j.packet.IcmpV4EchoReplyPacket;
 import org.pcap4j.packet.IpV4Packet;
-import org.pcap4j.packet.IpV4Rfc1349Tos;
 import org.pcap4j.packet.IpV4Rfc791Tos;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.SimpleBuilder;
@@ -103,7 +102,7 @@ class IpV4Host  implements ListenOn {
 			Inet4Address targetIp = packet.get(IpV4Packet.class).getHeader().getDstAddr();
 			if(targetIp.equals(ipAddr)){
 				if(packet.contains(IcmpV4EchoPacket.class)){
-					loger.info("IPv4: Receive a icmpv4 echo packet to myself.");
+					loger.info("IPv4: Receive icmpv4 echo packet to myself.");
 					doEchoReply(packet);
 				}
 				return;

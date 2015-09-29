@@ -1,8 +1,6 @@
 package cn.zjp.mock.network;
 
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.util.concurrent.Executors;
 
 import org.apache.logging.log4j.LogManager;
@@ -12,14 +10,10 @@ import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
-import org.pcap4j.packet.ArpPacket;
+import org.pcap4j.core.Pcaps;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.Packet;
-import org.pcap4j.packet.namednumber.ArpHardwareType;
-import org.pcap4j.packet.namednumber.ArpOperation;
 import org.pcap4j.packet.namednumber.EtherType;
-import org.pcap4j.core.Pcaps;
-import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
 
 public class EthernetHost extends Node {
@@ -90,28 +84,9 @@ public class EthernetHost extends Node {
 		.dstAddr(dstMac)
 		.srcAddr(hwAddr)
 		.payloadBuilder(payloadBuilder)
-		.type(EtherType.ARP)
+		.type(type)
 		.paddingAtBuild(true);
 		sendPacket(ethBuilder.build());
-		
-	}
-	
-	public void sendArpReply(Packet packet, Inet4Address srcIp) {
-		MacAddress dstMac = packet.get(ArpPacket.class).getHeader().getSrcHardwareAddr();
-		InetAddress dstIP = packet.get(ArpPacket.class).getHeader().getSrcProtocolAddr();
-		ArpPacket.Builder arpB = new ArpPacket.Builder();
-		
-		arpB
-		.hardwareType(ArpHardwareType.ETHERNET)
-		.protocolType(EtherType.IPV4)
-		.hardwareAddrLength((byte)MacAddress.SIZE_IN_BYTES)
-		.protocolAddrLength((byte) ByteArrays.INET4_ADDRESS_SIZE_IN_BYTES)
-		.dstHardwareAddr(dstMac)
-		.srcHardwareAddr(hwAddr)
-		.dstProtocolAddr(dstIP)
-		.srcProtocolAddr(srcIp)
-		.operation(ArpOperation.REPLY);
-		
 		
 	}
 	
