@@ -1,0 +1,16 @@
+#! /bin/sh
+#
+# UTest.sh
+# Copyright (C) 2015 zach <zacharyzjp@gmail.com>
+#
+# Distributed under terms of the MIT license.
+#
+[ $# -ge 1 ] || {
+    echo "No test class given to run."
+    exit 1
+}
+DOTEST="java -cp .:${CLASSPATH} org.junit.runner.JUnitCore $@"
+echo ${DOTEST}
+exec ${DOTEST}
+
+
