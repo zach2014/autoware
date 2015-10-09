@@ -4,8 +4,9 @@
  *
  * Distributed under terms of the MIT license.
  */
+import java.util.Iterator;
 
-public class FixedCapStack<T>
+public class FixedCapStack<T> implements Iterable<T>
 {
     final private T[] stack;
     private int top;
@@ -15,6 +16,19 @@ public class FixedCapStack<T>
 	    stack = (T[]) new Object[cap]; 
         top = 0;
 	}
+
+    public Iterator<T> iterator(){
+        return new ArrayStackIterator();
+    }
+
+    class ArrayStackIterator implements Iterator<T> {
+        int cur = top - 1;
+
+        public boolean hasNext(){ return cur >= 0; }
+        public T next(){
+            return stack[cur--];
+        }
+    }
 
     public T pop(){
         if(isEmpty())

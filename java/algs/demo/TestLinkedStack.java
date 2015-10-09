@@ -39,5 +39,18 @@ public class TestLinkedStack
     public void fail_pop_for_empty(){
         onTest.pop();
     }
+    
+    @Test (expected= IllegalStateException.class)
+    public void should_be_iterable(){
+        LinkedStack<String> copy = new LinkedStack<String>();
+        for(String i : onTest){
+            copy.push(i);
+        }
+        boolean allMatched = true;
+        for(String str : data){
+            allMatched = str.equals(copy.pop());
+        }
+        assertTrue(allMatched);
+    }
 }
 

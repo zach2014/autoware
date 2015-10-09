@@ -4,9 +4,15 @@
  *
  * Distributed under terms of the MIT license.
  */
+import java.util.Iterator;
 
-public class LinkedStack<T>
+public class LinkedStack<T> implements Iterable <T>
 {
+    private class Node {
+        T item;
+        Node next;
+    }
+
     private Node first;
 
 	public LinkedStack() {
@@ -33,9 +39,19 @@ public class LinkedStack<T>
         return null == first;
     }
 
-    private class Node {
-        T item;
-        Node next;
+    public Iterator<T> iterator(){
+        return new LinkedStackIterator();
     }
+
+    class LinkedStackIterator implements Iterator<T>{
+        private Node cur = first; 
+        public boolean hasNext(){ return cur != null; }
+        public T next() {
+            T item = cur.item;
+            cur = cur.next;
+            return item;
+        }
+    }
+
 }
 

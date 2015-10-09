@@ -14,11 +14,11 @@ public class TestFixedCapStack
 {
     private static String[] data = {"This", "is", "just", "a", "test", "."};
     private static int size = 10;
-    private FixedCapStack onTest;
+    private FixedCapStack<String> onTest;
     
     @Before
     public void setUp(){
-        onTest = new FixedCapStack(size);
+        onTest = new FixedCapStack<String>(size);
     }
 
     @After
@@ -47,6 +47,20 @@ public class TestFixedCapStack
             onTest.push(str);
             onTest.push(str);
         }
+    }
+
+    @Test (expected= IllegalStateException.class)
+    public void should_be_iterable(){
+        FixedCapStack<String> copy = new FixedCapStack<String>(size);
+        for(String i : onTest){
+            copy.push(i);
+        }
+        boolean allMatched = true;
+        for(String str : data){
+            allMatched = str.equals(copy.pop());
+        }
+        assertTrue(allMatched);
+        
     }
 }
 
