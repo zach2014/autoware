@@ -70,8 +70,9 @@ public class EthernetHost extends Node {
 			} catch (NotOpenException e) {
 				throw new IllegalStateException("Never to here.");
 			}
-			
-			this.capExecutor = Executors.newSingleThreadExecutor();
+			if(null == capExecutor){
+				this.capExecutor = Executors.newSingleThreadExecutor();
+			}	
 			capExecutor.execute(new CaptureLooper());
 			capturing = true;
 		}
