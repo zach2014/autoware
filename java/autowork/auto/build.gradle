@@ -33,12 +33,38 @@ dependencies {
 
 test {
     systemProperties 'property': 'value'
-    testLogging {
-    	events 'started', 'passed'
+    useJUnit {
+    	includeCategories 'cn.zjp.category.Pcap'
     }
-    filter{
-    	includeTestsMatching "cn.zjp.mock.network.IpV4HostTest"
+    // enable TestNG support (default is JUnit)
+   	//useTestNG()
+
+   	// set a system property for the test JVM(s)
+   	systemProperty 'some.prop', 'value'
+
+   	// explicitly include or exclude tests
+   	//include 'cn/zjp/mock/**'
+   	exclude 'cn/zjp/nio/**'
+   	exclude 'cn/zjp/web/**'
+   	filter{
+    	//includeTestsMatching "cn.zjp.mock.network.IpV4HostTest"
     }
+
+   	// listen to events in the test execution lifecycle
+ 	beforeTest { descriptor ->
+      logger.lifecycle("Going To: " + descriptor)
+	}
+	testLogging { events 'started', 'passed', 'failed', 'skipped' }
+
+	// show standard out and standard error of the test JVM(s) on the console
+	//testLogging.showStandardStreams = true
+	
+	// set heap size for the test JVM(s)
+  	minHeapSize = "128m"
+   	maxHeapSize = "512m"
+
+   	// set JVM arguments for the test JVM(s), but not for java8.0 anymore.
+   	//jvmArgs '-XX:MaxPermSize=256m'
 }
 
 //uploadArchives {

@@ -9,8 +9,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.pcap4j.util.MacAddress;
 
+import cn.zjp.category.Pcap;
+
+@Category({Pcap.class})
 public class IpV4HostTest {
 	
 	private static IpV4Host host_v4;
@@ -41,5 +45,4 @@ public class IpV4HostTest {
 		Thread.sleep(10000);
 		assertTrue(host_v4.isCapturing());
 	}
-
 }
