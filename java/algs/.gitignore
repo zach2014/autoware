@@ -1,29 +1,9 @@
-# idea project files
-.idea
-*/.idea/
-algs.iml
-
-# gradle files
-/.gradle
-*/.gradle/
-settings.gradle
-
-# Eclipse project files
-.project
-.classpath
-.settings
-/bin
-*/bin/
-
 # Build targets
-/target
-*/target/
-/build
-*/build/
-
-# Report directories
-/reports
-*/reports
+*/classes/
 
 # JVM crash logs
 hs_err_pid*.log
+
+# swp file 
+*.swp
+

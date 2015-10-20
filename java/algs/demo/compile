@@ -1,0 +1,36 @@
+#! /bin/sh
+#
+# compile
+# Copyright (C) 2015 zach <zacharyzjp@gmail.com>
+#
+# Distributed under terms of the MIT license.
+#
+TOPDIR=$(pwd)
+CP=$CLASSPATH
+USAGE="usage: compile [CLASSPATH] [DESTPATH] <SOURCEDIR>"
+if [ $# -eq 3 ] ; then 
+    CLASSHOME=$1
+    DEST=$2
+    SOURCE=$3
+elif [ $# -eq 1 ] ; then 
+    CLASSHOME=$TOPDIR
+    DEST=$TOPDIR
+    SOURCE=$1
+else 
+    echo $USAGE
+    exit 1
+fi
+
+ALL_CS=`find $CLASSHOME -name wk*`
+
+for class in $ALL_CS 
+do 
+    CP=$class:$CP
+done
+if [ ! -d $DEST ]; then 
+    mkdir -p $DEST
+fi
+
+CMD="javac -cp $CP -d $DEST $SOURCE"  
+exec $CMD
+#javac  -cp classes/test/wk1:classes/test/wk2::/opt/jars/*  test/DemoTestSuite.java  -d classes/test/
