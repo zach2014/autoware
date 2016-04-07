@@ -15,11 +15,15 @@ repositories {
     mavenCentral()
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.12'
+}
+
 dependencies {
     compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '2.46.0'
     // compile group: 'org.jbehave', name: 'jbehave-core', version: '4.0'
     // compile group: 'org.jbehave.web', name: 'jbehave-web', version: '3.6-beta-2'
-    compile 'io.netty:netty-all:4.1.0.Beta5'
+    //compile 'io.netty:netty-all:4.1.0.Beta5'
     compile 'info.cukes:cucumber-java:1.2.3'
     compile 'org.pcap4j:pcap4j-core:1.6.0'
     compile 'org.pcap4j:pcap4j-packetfactory-static:1.6.0'
