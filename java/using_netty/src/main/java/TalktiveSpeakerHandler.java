@@ -38,7 +38,12 @@ public class TalktiveSpeakerHandler extends ChannelInboundHandlerAdapter {
     private final ChannelFutureListener repeator  = new ChannelFutureListener() {
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
-            sayHello();
+            if (future.isSuccess()) {
+                sayHello();
+            } else {
+                future.cause().printStackTrace();
+                future.channel().close();
+            }
         }
     };
 

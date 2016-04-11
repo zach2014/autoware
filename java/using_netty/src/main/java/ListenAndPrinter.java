@@ -22,10 +22,10 @@ public class ListenAndPrinter
     }
 
     public void start(){
-        EventLoopGroup eGroup = new NioEventLoopGroup();
+        EventLoopGroup sGroup = new NioEventLoopGroup();
 
         ServerBootstrap b = new ServerBootstrap();
-        b.group(eGroup)
+        b.group(sGroup)
          .channel(NioServerSocketChannel.class)
          .option(ChannelOption.SO_BACKLOG, 128)
          .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -38,12 +38,11 @@ public class ListenAndPrinter
          }).option(ChannelOption.SO_KEEPALIVE, true);
         ChannelFuture future = b.bind(this.port);
         System.out.println("Server is bound at " + this.port);
-        try{
-            future.sync();
-        } catch (InterruptedException i){
-
-        } finally {
-            //eGroup.shutdownGracefully();
+        try {
+            future.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            sGroup.shutdownGracefully();
         }
 
     }

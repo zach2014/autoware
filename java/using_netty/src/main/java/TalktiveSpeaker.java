@@ -20,7 +20,8 @@ public class TalktiveSpeaker {
 
     public void run() {
         Bootstrap b = new Bootstrap();
-        b.group(new NioEventLoopGroup())
+        NioEventLoopGroup cGroup = new NioEventLoopGroup();
+        b.group(cGroup)
          .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 120)
          .channel(NioSocketChannel.class).handler(new ChannelInitializer<SocketChannel>() {
             @Override
@@ -32,11 +33,10 @@ public class TalktiveSpeaker {
         ChannelFuture f = b.connect(new InetSocketAddress(this.port));
         System.out.println("Client will connect");
         try {
-            f.sync();
+            f.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } finally {
-
+            cGroup.shutdownGracefully();
         }
     }
 
