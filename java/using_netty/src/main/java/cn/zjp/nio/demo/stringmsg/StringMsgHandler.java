@@ -11,7 +11,6 @@ public class StringMsgHandler extends SimpleChannelInboundHandler<String> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
         System.out.println("Received: " + msg);
-        ctx.writeAndFlush(StringMsgServer.DEF_RESP);
     }
 
     @Override

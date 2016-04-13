@@ -5,8 +5,11 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 
 /**
  * Created by zengjp on 16-4-12.
@@ -24,7 +27,7 @@ public class StringMsgClient {
         Bootstrap cBootstrap = new Bootstrap();
         cBootstrap.group(eventLoop1)
                 .option(ChannelOption.SO_KEEPALIVE, true)
-                .channel(SocketChannel.class)
+                .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
@@ -37,5 +40,15 @@ public class StringMsgClient {
             e.printStackTrace();
             eventLoop1.shutdownGracefully();
         }
+    }
+
+    public static void main(String[] args) {
+        try {
+            StringMsgClient c = new StringMsgClient(new InetSocketAddress(InetAddress.getLocalHost(), 9090));
+            c.init();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
     }
 }

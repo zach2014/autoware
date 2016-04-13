@@ -6,6 +6,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
@@ -41,7 +42,7 @@ public class StringMsgServer {
         sBootstrap.group(eventLoop1)
                 .handler(new LoggingHandler(LogLevel.DEBUG))
                 .option(ChannelOption.SO_BACKLOG, 10)
-                .channel(ServerSocketChannel.class)
+                .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
@@ -54,5 +55,10 @@ public class StringMsgServer {
             e.printStackTrace();
             eventLoop1.shutdownGracefully();
         }
+    }
+
+    public static void main(String[] arg) {
+        StringMsgServer s = new StringMsgServer(9090);
+        s.start();
     }
 }
