@@ -7,46 +7,40 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
-/**
- * Created by zengjp on 16-4-8.
- */
 public class TalktiveSpeakerHandler extends ChannelInboundHandlerAdapter {
-    private static final byte[] GREEDY = {'H', 'e', 'l', 'l', 'o', ',', 't', 'h', 'e', 'r', 'e', '.', '\n'};
-    private ChannelHandlerContext ctx;
-    private ByteBuf greedy_msg;
-
+  private static final byte[] GREEDY = {'H', 'e', 'l', 'l', 'o', ',', 't', 'h', 'e', 'r', 'e', '.', '\n'};
+  private ChannelHandlerContext ctx;
+  private ByteBuf greedy_msg;
+  private final ChannelFutureListener repeator = new ChannelFutureListener() {
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        this.ctx = ctx;
-        this.greedy_msg = ctx.alloc().directBuffer().writeBytes(GREEDY);
+    public void operationComplete(ChannelFuture future) throws Exception {
+      if (future.isSuccess()) {
         sayHello();
+      } else {
+        future.channel().close();
+      }
     }
+  };
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
-        ctx.close();
-    }
+  @Override
+  public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    this.ctx = ctx;
+    greedy_msg = ctx.alloc().directBuffer().writeBytes(GREEDY);
+    sayHello();
+  }
 
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        ReferenceCountUtil.release(greedy_msg);
-    }
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    ctx.close();
+  }
 
-    private final void sayHello() {
-        ctx.writeAndFlush(greedy_msg.duplicate().retain()).addListener(repeator);
-    }
+  @Override
+  public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    ReferenceCountUtil.release(greedy_msg);
+  }
 
-    private final ChannelFutureListener repeator  = new ChannelFutureListener() {
-        @Override
-        public void operationComplete(ChannelFuture future) throws Exception {
-            if (future.isSuccess()) {
-                sayHello();
-            } else {
-                future.cause().printStackTrace();
-                future.channel().close();
-            }
-        }
-    };
+  private void sayHello() {
+    ctx.writeAndFlush(greedy_msg.duplicate().retain()).addListener(repeator);
+  }
 
 }
