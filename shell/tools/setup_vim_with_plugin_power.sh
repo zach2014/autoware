@@ -14,7 +14,7 @@ AUTHOR=$1
 EMAIL=$2
 
 echo "Starting to intall vim for your favarite editor"
-sduo apt-get update && sudo apt-get -y upgrade 
+sudo apt-get update && sudo apt-get -y upgrade 
 sudo apt-get -y install vim
 
 echo "Pathogen is the bundle manager for vim"
