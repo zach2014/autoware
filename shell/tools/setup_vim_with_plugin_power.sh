@@ -4,22 +4,40 @@
 # to install vim on ubuntu14.04 with effective plugins
 #
 # set -xe 
-if [ "-h" == "$!" ] ; then 
+set -o errexit
+
+usage() {
+    echo "Usage: $0 [Author] [Contact] [ProxyHost:Port]"
+    echo "Please care the proxy in your network"
+}
+if [ "-h" = "$1" ] ; then 
 {
-    echo "Usage: $0 [Author] [Contact]"
+    usage
     exit 1 
 }
 fi
-AUTHOR=$1
-EMAIL=$2
 
+if [ $# -lt 2 ] ; then {
+    echo "Error: missing required parametes, get more help info with -h option"
+    exit 1
+} else {
+    AUTHOR=$1
+    EMAIL=$2
+    if [ ! -z $3 ] ; then {
+	proxy=$3    
+	export http_proxy="http://$proxy"
+	export https_proxy="https://$proxy"
+    }
+    fi
+}
+fi
+sh_c="sudo -E sh -c "
 echo "Starting to intall vim for your favarite editor"
-sudo apt-get update && sudo apt-get -y upgrade 
-sudo apt-get -y install vim
+$sh_c 'sleep 3; apt-get update; sleep 3; apt-get -y install vim'
 
 echo "Pathogen is the bundle manager for vim"
 mkdir -p $HOME/.vim/autoload  $HOME/.vim/bundle
-which curl || sudo apt-get -y install curl || echo "fail to install curl" 
+which curl || $sh_c 'sleep 3; apt-get -y install curl' || echo "fail to install curl" 
 
 curl -LSso $HOME/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
@@ -40,16 +58,15 @@ git clone  https://github.com/scrooloose/nerdtree.git  $HOME/.vim/bundle/nerdtre
 echo "#######################################################"
 echo "Tagbar is the bundle of showing code uotlines"
 echo "#######################################################"
-sudo apt-get -y install exuberant-ctags
+$sh_c 'sleep 3; apt-get -y install exuberant-ctags'
 git clone https://github.com/majutsushi/tagbar $HOME/.vim/bundle/tagbar
 
-PROXY=$http_proxy
-which pip || sudo apt-get -y install python-pip || echo "fail to install python-pip"
+which pip || $sh_c 'sleep 3; apt-get -y install python-pip' || echo "fail to install python-pip"
 
 echo "#######################################################"
 echo "Jedi-vim is the bundle for auto-complete of python code "
 echo "#######################################################"
-sudo pip --proxy=$PROXY install jedi
+$sh_c "sleep 3; pip --proxy=$http_proxy install jedi"
 git clone https://github.com/davidhalter/jedi-vim.git $HOME/.vim/bundle/jedi-vim
 
 echo "#######################################################"
